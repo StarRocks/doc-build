@@ -1,0 +1,33 @@
+{
+  "docs": [
+    {
+      "type": "category",
+      "collapsible": "false",
+      "label": "StarRocks",
+      "items": [
+        "release-3.4",
+        "release-3.3",
+        "release-3.2",
+        "release-3.1",
+        "release-3.0",
+        "release-2.5",
+        "release-2.3",
+        "release-2.2",
+        "release-2.1",
+        "release-2.0",
+        "release-1.19"
+      ]
+    },
+    {
+      "type": "category",
+      "collapsible": "false",
+      "label": "Connectors",
+      "items": [
+        "kafka_connector",
+        "spark_connector",
+        "flink_connector"
+      ]
+    },
+    "starrocks-kubernetes-operator"
+  ]
+}

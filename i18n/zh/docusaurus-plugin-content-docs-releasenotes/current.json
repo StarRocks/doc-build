@@ -1,0 +1,30 @@
+{
+  "version.label": {
+    "message": "Next",
+    "description": "The label for version current"
+  },
+  "sidebar.English.category.StarRocks": {
+    "message": "StarRocks",
+    "description": "The label for category StarRocks in sidebar English"
+  },
+  "sidebar.Chinese.category.StarRocks": {
+    "message": "StarRocks",
+    "description": "The label for category StarRocks in sidebar Chinese"
+  },
+  "sidebar.English.category.Connectors": {
+    "message": "Connectors",
+    "description": "The label for category Connectors in sidebar English"
+  },
+  "sidebar.Chinese.category.Connectors": {
+    "message": "Connectors",
+    "description": "The label for category Connectors in sidebar Chinese"
+  },
+  "sidebar.docs.category.StarRocks": {
+    "message": "StarRocks",
+    "description": "The label for category StarRocks in sidebar docs"
+  },
+  "sidebar.docs.category.Connectors": {
+    "message": "Connectors",
+    "description": "The label for category Connectors in sidebar docs"
+  }
+}

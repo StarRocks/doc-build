@@ -1,0 +1,23 @@
+name: __Prod__Clean CDN Cache
+on: workflow_dispatch
+env:
+  DOC_BUILD_TYPE: prod
+  OSS_KEY: ${{ secrets.OSS_KEY }}
+  OSS_SECRET: ${{ secrets.OSS_SECRET }}
+  ES_WRITE_USER: ${{ secrets.ES_WRITE_USER }}
+  ES_WRITE_PASSWORD: ${{ secrets.ES_WRITE_PASSWORD }}
+  DOCS_GITHUB_USER: ${{ secrets.DOCS_GITHUB_USER }}
+  DOCS_GITHUB_TOKEN: ${{ secrets.DOCS_GITHUB_TOKEN }}
+jobs:
+  prod_deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET }}
+          aws-region: us-west-2
+      - name: clean cdn cache
+        run: |
+          aws cloudfront create-invalidation --distribution-id ED8JK0E608WXQ --paths "/*"

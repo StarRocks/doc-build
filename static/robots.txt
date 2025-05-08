@@ -1,0 +1,19 @@
+
+User-agent: *
+Disallow: /docs/assets/
+Disallow: /zh/docs/assets/
+Disallow: /docs/3.*/
+Disallow: /docs/2.5/
+Disallow: /zh/docs/3.*/
+Disallow: /zh/docs/2.5/
+
+User-agent: Googlebot
+Disallow: /docs/assets/
+Disallow: /zh/
+Disallow: /docs/3.*/
+Disallow: /docs/2.5/
+
+User-Agent: Algolia Crawler
+Allow: /
+
+Sitemap: https://docs.starrocks.io/sitemap.xml

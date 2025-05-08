@@ -1,0 +1,67 @@
+name: __Prod__Deploy_docusaurus
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "5 10 * * 1-5"
+env:
+  AWS_KEY: ${{ secrets.AWS_KEY }}
+  AWS_SECRET: ${{ secrets.AWS_SECRET }}
+jobs:
+  prod_deploy:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: 'main'
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 22
+          cache: 'yarn'
+          cache-dependency-path: 'yarn.lock'
+      
+      - uses: actions/cache@v3
+        id: cache
+        with:
+          path: ./node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+          
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET }}
+          aws-region: us-west-2
+      
+      - uses: actions/checkout@v3
+        with:
+          repository: starrocks/starrocks
+          fetch-depth: 0
+          path: ./temp
+
+      - name: Install Dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          yarn install --frozen-lockfile
+      
+      - run: npm run copy
+      - name: Build website
+        run:  |
+          export NODE_OPTIONS="--max_old_space_size=15360"
+          export DOCUSAURUS_IGNORE_SSG_WARNINGS=true
+          yarn build
+
+      - name: sync to S3
+        env:
+          BUCKET_SECRET: ${{ secrets.AWS_OSS_DOCS_PROD_BUCKET }}
+        run: |
+          aws s3 sync build/ s3://$BUCKET_SECRET/ --delete $*
+
+      - name: clean cdn cache
+        env:
+          CLOUFRONT_DIST_ID: ${{ secrets.AWS_OSS_DOCS_PROD_CLOUDFRONT_DIST_ID }}
+        run: |
+          aws cloudfront create-invalidation --distribution-id $CLOUFRONT_DIST_ID --paths "/*"
+
