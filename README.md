@@ -1,7 +1,25 @@
 # doc-build
 
+These are the published URLs for staging and production:
+
 - Staging, sandbox, test: https://docs-stage.starrocks.io/docs/introduction/StarRocks_intro/
 - Production: https://docs.starrocks.io/docs/introduction/StarRocks_intro/
+
+## Building staging or production
+
+There are GitHub workflows to build staging and production. These are run each weekday on a schedule. They can also be run on demand from the repo Actions menu.
+
+## Building locally
+
+You can build all of the languages and versions on a Macbook M2 with 16 GB RAM. Other machines may also build fine. To do this run these commands from the `doc-build` directory:
+
+```bash
+yarn install --frozen-lockfile
+git clone git@github.com:StarRocks/starrocks.git temp
+npm run copy
+export NODE_OPTIONS="--max-old-space-size=12192"
+yarn clear && yarn build && yarn serve
+```
 
 ## Changing versions
 
@@ -14,8 +32,7 @@ You may want to refer to the PRs that make these changes for the Candidate versi
 
 ### Edit `docs-site/versions.json`
 
-This is a Docusaurus `versions.json`, this one is used by Docusaurus to configure which versions should be included in nav.
-Add the new version to the top, and remove any versions that we will no longer publish (negotiate with CTO and PM)
+This is a Docusaurus `versions.json`, this one is used by Docusaurus to configure which versions should be included in nav. Add the new version to the top, and remove any versions that we will no longer publish (negotiate with CTO and PM)
 
 ```bash
 [
@@ -147,14 +164,4 @@ The release notes are published with their own nav. Edit the file `docusaurus/re
 
 Navigation entries for the `zh` docs need to be modified in some cases. For example, if we have a release candidate published, then the translation file needs to be edited to add the label `Candidate-3.4` (for example). This is done in the `starrocks/starrocks` repo, and the filename is `docs/docusaurus/i18n/zh/docusaurus-plugin-content-docs/current.json`. Make sure you edit this for the branch that is a release candidate.
 
-## Building locally
 
-You can build all of the languages and versions on a Macbook M2 with 16GB RAM. Other machines may also build fine. To do this run these commands from the `doc-build` directory:
-
-```bash
-yarn install --frozen-lockfile
-git clone git@github.com:StarRocks/starrocks.git temp
-npm run copy
-export NODE_OPTIONS="--max-old-space-size=12192"
-yarn clear && yarn build && yarn serve
-```
