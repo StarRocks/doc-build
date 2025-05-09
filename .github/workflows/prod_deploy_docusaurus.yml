@@ -1,8 +1,8 @@
 name: __Prod__Deploy_docusaurus
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "5 10 * * 1-5"
+  #schedule:
+      #- cron: "5 10 * * 1-5"
 env:
   AWS_KEY: ${{ secrets.AWS_KEY }}
   AWS_SECRET: ${{ secrets.AWS_SECRET }}
