@@ -35,12 +35,14 @@ const copyDocs = () => {
     if (fs.existsSync(enDir)) {
       fs.rmSync(enDir, { recursive: true });
     }
+    if (fs.existsSync(jaDir)) {
     const jaFolders = fs.readdirSync(jaDir);
     jaFolders.forEach((folder) => {
       if (folder.startsWith("version-")) {
         fs.rmSync(jaDir + "/" + folder, { recursive: true });
       }
     });
+    }
     const zhFolders = fs.readdirSync(zhDir);
     zhFolders.forEach((folder) => {
       if (folder.startsWith("version-")) {
