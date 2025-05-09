@@ -42,9 +42,13 @@ const config = {
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'throw',
 
+  future: {
+    experimental_faster: true,
+  },
+
   i18n: {
     defaultLocale: 'en',
-    locales: ['en', 'zh'],
+    locales: ['en', 'zh', 'ja'],
     localeConfigs: {
       en: {
         htmlLang: 'en-US',

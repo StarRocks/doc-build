@@ -4,6 +4,10 @@
     "sourceDir": "docs/zh"
   },
   {
+    "id": "ja",
+    "sourceDir": "docs/ja"
+  },
+  {
     "id": "en-us",
     "sourceDir": "docs/en"
   }

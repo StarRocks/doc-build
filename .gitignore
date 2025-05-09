@@ -16,6 +16,7 @@ i18n/zh/docusaurus-plugin-content-docs-releasenotes/current/*.md
 .cache-loader
 .cache
 public
+i18n/ja/docusaurus-plugin-content-blog/**
 
 # Misc
 .DS_Store

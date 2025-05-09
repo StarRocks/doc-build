@@ -17,6 +17,7 @@ You can build all of the languages and versions on a Macbook M2 with 16 GB RAM. 
 yarn install --frozen-lockfile
 git clone git@github.com:StarRocks/starrocks.git temp
 npm run copy
+export DOCUSAURUS_IGNORE_SSG_WARNINGS=true
 export NODE_OPTIONS="--max-old-space-size=12192"
 yarn clear && yarn build && yarn serve
 ```
