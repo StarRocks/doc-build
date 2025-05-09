@@ -22,5 +22,6 @@ module.exports = {
   versions,
   enSiderbarPath: 'common/releasenotes/en-us',
   zhSiderbarPath: 'common/releasenotes/zh-cn',
+  jaSiderbarPath: 'common/releasenotes/ja',
   commonSiderBars: ['release_notes','ecosystem_release', 'developers']
 };

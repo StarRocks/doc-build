@@ -3,7 +3,7 @@ const path = require("path");
 const config = require("./src/config");
 const fse = require("fs-extra");
 const fs = require("fs");
-const {zhSiderbarPath,enSiderbarPath,locales,commonSiderBars} = config
+const {jaSiderbarPath,zhSiderbarPath,enSiderbarPath,locales,commonSiderBars} = config
 const versions = config.versions.filter((i) => i.branch !== "latest");
 const exec = require("child_process").exec;
 const execSync = require("child_process").execSync;
@@ -19,9 +19,16 @@ const copyDocs = () => {
   const deleteExistDir = () => {
     const enDir = path.join(__dirname, "versioned_docs");
     const zhDir = path.join(__dirname, "i18n/zh/docusaurus-plugin-content-docs/");
+    const jaDir = path.join(__dirname, "i18n/ja/docusaurus-plugin-content-docs/");
     if (fs.existsSync(enDir)) {
       fs.rmSync(enDir, { recursive: true });
     }
+    const jaFolders = fs.readdirSync(jaDir);
+    jaFolders.forEach((folder) => {
+      if (folder.startsWith("version-")) {
+        fs.rmSync(jaDir + "/" + folder, { recursive: true });
+      }
+    });
     const zhFolders = fs.readdirSync(zhDir);
     zhFolders.forEach((folder) => {
       if (folder.startsWith("version-")) {
@@ -46,12 +53,20 @@ const copyDocs = () => {
           __dirname,
           `i18n/zh/docusaurus-plugin-content-docs/version-${v.branch}`
         );
+      } else
+      if (l.id === "ja") {
+        to = path.join(
+          __dirname,
+          `i18n/ja/docusaurus-plugin-content-docs/version-${v.branch}`
+        );
       }
-      execSync(`cd ${from} && git checkout ${targetBranch}`);
+      // added `mkdir -p` because older versions do not have `docs/ja` dir, so `cd` fails
+      execSync(`mkdir -p ${from} && cd ${from} && git checkout ${targetBranch}`);
       if(targetBranch === 'main'){
         const floderPath = {
           'en-us':enSiderbarPath,
           'zh-cn':zhSiderbarPath,
+          'ja':jaSiderbarPath,
         }[l.id] || '/'
         to = path.join(__dirname,floderPath)
         deleteDirIfExist(to)
