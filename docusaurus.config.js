@@ -87,18 +87,18 @@ const config = {
             if (isVersioningDisabled) {
               return 'current';
             } else {
-              return '3.4';
+              return '3.5';
             }
           })(),
 
-          //onlyIncludeVersions: ['3.4', '3.3', 3.2', '3.1', '2.5'],
+          //onlyIncludeVersions: ['3.5', '3.4', '3.3', 3.2', '3.1', '2.5'],
           onlyIncludeVersions: (() => {
             if (isVersioningDisabled) {
               return ['current'];
             } else if (isBuildFast){
               return [...versions.slice(0, 1)];
             } else {
-              return ['3.4', '3.3', '3.2', '3.1', '2.5'];
+              return ['3.5', '3.4', '3.3', '3.2', '3.1', '2.5'];
             }
           })(),
 
@@ -107,6 +107,7 @@ const config = {
               return { current: { label: 'current' } };
             } else {
               return {
+                '3.5': { label: 'Candidate-3.5', banner: 'none' },
                 '3.4': { label: 'Latest-3.4', banner: 'none' },
                 '3.3': { label: 'Stable-3.3', banner: 'none' },
                 '3.2': { label: '3.2', banner: 'none' },
