@@ -5,6 +5,7 @@
       "collapsible": "false",
       "label": "StarRocks",
       "items": [
+        "release-3.5",
         "release-3.4",
         "release-3.3",
         "release-3.2",
