@@ -208,6 +208,108 @@ const EnglishFeatureList = [
   },
 ];
 
+const JapaneseFeatureList = [
+  {
+    title: '紹介',
+    url: '../../introduction/',
+    description: (
+      <>
+        OLAP、機能、アーキテクチャ
+      </>
+    ),
+  },
+  {
+    title: 'クイックスタート',
+    url: '../../quick_start/',
+    description: (
+      <>
+        デプロイ、ロード、クエリ
+      </>
+    ),
+  },
+  {
+    title: 'データロード',
+    url: '../../loading/Loading_intro/',
+    description: (
+      <>
+        データクレンジング、変換、ロード
+      </>
+    ),
+  },
+  {
+    title: 'テーブルデザイン',
+    url: '../../table_design/StarRocks_table_design/',
+    description: (
+      <>
+        テーブル、インデックス、パーティション、クエリー加速
+      </>
+    ),
+  },
+  {
+    title: 'データレイクをクエリ',
+    url: '../../data_source/data_lakes/',
+    description: (
+      <>
+        Iceberg、Hive、Delta Lake …
+      </>
+    ),
+  },
+  {
+    title: 'セミ構造化タイプ',
+    url: '../../category/semi-structured/',
+    description: (
+      <>
+        JSON、map、struct、array
+      </>
+    ),
+  },
+  {
+    title: '外部システム統合',
+    url: '../../integrations/',
+    description: (
+      <>
+        BI、IDE、認証情報
+      </>
+    ),
+  },
+  {
+    title: '管理',
+    url: '../../administration/',
+    description: (
+      <>
+        スケールインとスケールアウト、バックアップ、権限、パフォーマンスチューニング
+      </>
+    ),
+  },
+  {
+    title: 'リファレンス',
+    url: '../../category/reference/',
+    description: (
+      <>
+        SQL 構文、コマンド、関数、変数
+      </>
+    ),
+  },
+  {
+    title: 'FAQ',
+    url: '../../faq/',
+    description: (
+      <>
+        デプロイ、ロード、クエリー、権限 FAQ
+      </>
+    ),
+  },
+  {
+    title: 'ベンチマーク',
+    url: '../../benchmarking/',
+    description: (
+      <>
+        ベンチマーク：データベース・パフォーマンスの比較
+      </>
+    ),
+  },
+];
+
 function Feature({url, title, description}) {
   return (
     <div className={clsx('col col--6 margin-bottom--lg')}>
@@ -229,6 +331,19 @@ export default function Features({language}) {
         <div className="container">
           <div className="row">
             {ChineseFeatureList.map((props, idx) => (
+              <Feature key={idx} {...props} />
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+  else if (language == "Japanese") {
+    return (
+      <section className={styles.features}>
+        <div className="container">
+          <div className="row">
+            {JapaneseFeatureList.map((props, idx) => (
               <Feature key={idx} {...props} />
             ))}
           </div>
