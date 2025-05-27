@@ -141,28 +141,24 @@ cp -r common/releasenotes/en-us/trace-tools versioned_docs/version-3.3/developer
 cp -r common/releasenotes/en-us/build-starrocks versioned_docs/version-3.2/developers/
 cp -r common/releasenotes/en-us/code-style-guides versioned_docs/version-3.2/developers/
 cp common/releasenotes/en-us/debuginfo.md versioned_docs/version-3.2/developers/
-cp common/releasenotes/en-us/versions.md versioned_docs/version-3.2/developers/
 cp -r common/releasenotes/en-us/development-environment versioned_docs/version-3.2/developers/
 cp -r common/releasenotes/en-us/trace-tools versioned_docs/version-3.2/developers/
 
 cp -r common/releasenotes/en-us/build-starrocks versioned_docs/version-3.1/developers/
 cp -r common/releasenotes/en-us/code-style-guides versioned_docs/version-3.1/developers/
 cp common/releasenotes/en-us/debuginfo.md versioned_docs/version-3.1/developers/
-cp common/releasenotes/en-us/versions.md versioned_docs/version-3.1/developers/
 cp -r common/releasenotes/en-us/development-environment versioned_docs/version-3.1/developers/
 cp -r common/releasenotes/en-us/trace-tools versioned_docs/version-3.1/developers/
 
 cp -r common/releasenotes/zh-cn/build-starrocks i18n/zh/docusaurus-plugin-content-docs/version-3.1/developers/
 cp -r common/releasenotes/zh-cn/code-style-guides i18n/zh/docusaurus-plugin-content-docs/version-3.1/developers/
 cp common/releasenotes/zh-cn/debuginfo.md i18n/zh/docusaurus-plugin-content-docs/version-3.1/developers/
-cp common/releasenotes/zh-cn/versions.md i18n/zh/docusaurus-plugin-content-docs/version-3.1/developers/
 cp -r common/releasenotes/zh-cn/development-environment i18n/zh/docusaurus-plugin-content-docs/version-3.1/developers/
 cp -r common/releasenotes/zh-cn/trace-tools i18n/zh/docusaurus-plugin-content-docs/version-3.1/developers/
 
 cp -r common/releasenotes/zh-cn/build-starrocks i18n/zh/docusaurus-plugin-content-docs/version-3.2/developers/
 cp -r common/releasenotes/zh-cn/code-style-guides i18n/zh/docusaurus-plugin-content-docs/version-3.2/developers/
 cp common/releasenotes/zh-cn/debuginfo.md i18n/zh/docusaurus-plugin-content-docs/version-3.2/developers/
-cp common/releasenotes/zh-cn/versions.md i18n/zh/docusaurus-plugin-content-docs/version-3.2/developers/
 cp -r common/releasenotes/zh-cn/development-environment i18n/zh/docusaurus-plugin-content-docs/version-3.2/developers/
 cp -r common/releasenotes/zh-cn/trace-tools i18n/zh/docusaurus-plugin-content-docs/version-3.2/developers/
 
@@ -190,14 +186,12 @@ cp -r common/releasenotes/zh-cn/trace-tools i18n/zh/docusaurus-plugin-content-do
 cp -r common/releasenotes/ja/build-starrocks i18n/ja/docusaurus-plugin-content-docs/version-3.1/developers/
 cp -r common/releasenotes/ja/code-style-guides i18n/ja/docusaurus-plugin-content-docs/version-3.1/developers/
 cp common/releasenotes/ja/debuginfo.md i18n/ja/docusaurus-plugin-content-docs/version-3.1/developers/
-cp common/releasenotes/ja/versions.md i18n/ja/docusaurus-plugin-content-docs/version-3.1/developers/
 cp -r common/releasenotes/ja/development-environment i18n/ja/docusaurus-plugin-content-docs/version-3.1/developers/
 cp -r common/releasenotes/ja/trace-tools i18n/ja/docusaurus-plugin-content-docs/version-3.1/developers/
 
 cp -r common/releasenotes/ja/build-starrocks i18n/ja/docusaurus-plugin-content-docs/version-3.2/developers/
 cp -r common/releasenotes/ja/code-style-guides i18n/ja/docusaurus-plugin-content-docs/version-3.2/developers/
 cp common/releasenotes/ja/debuginfo.md i18n/ja/docusaurus-plugin-content-docs/version-3.2/developers/
-cp common/releasenotes/ja/versions.md i18n/ja/docusaurus-plugin-content-docs/version-3.2/developers/
 cp -r common/releasenotes/ja/development-environment i18n/ja/docusaurus-plugin-content-docs/version-3.2/developers/
 cp -r common/releasenotes/ja/trace-tools i18n/ja/docusaurus-plugin-content-docs/version-3.2/developers/
 
@@ -225,20 +219,17 @@ cp -r common/releasenotes/ja/trace-tools i18n/ja/docusaurus-plugin-content-docs/
 cp -r common/releasenotes/en-us/build-starrocks versioned_docs/version-2.5/developers/
 cp -r common/releasenotes/en-us/code-style-guides versioned_docs/version-2.5/developers/
 cp common/releasenotes/en-us/debuginfo.md versioned_docs/version-2.5/developers/
-cp common/releasenotes/en-us/versions.md versioned_docs/version-2.5/developers/
 cp -r common/releasenotes/en-us/development-environment versioned_docs/version-2.5/developers/
 cp -r common/releasenotes/en-us/trace-tools versioned_docs/version-2.5/developers/
 
 cp -r common/releasenotes/zh-cn/build-starrocks i18n/zh/docusaurus-plugin-content-docs/version-2.5/developers/
 cp -r common/releasenotes/zh-cn/code-style-guides i18n/zh/docusaurus-plugin-content-docs/version-2.5/developers/
 cp common/releasenotes/zh-cn/debuginfo.md i18n/zh/docusaurus-plugin-content-docs/version-2.5/developers/
-cp common/releasenotes/zh-cn/versions.md i18n/zh/docusaurus-plugin-content-docs/version-2.5/developers/
 cp -r common/releasenotes/zh-cn/development-environment i18n/zh/docusaurus-plugin-content-docs/version-2.5/developers/
 cp -r common/releasenotes/zh-cn/trace-tools i18n/zh/docusaurus-plugin-content-docs/version-2.5/developers/
 
 cp -r common/releasenotes/ja/build-starrocks i18n/ja/docusaurus-plugin-content-docs/version-2.5/developers/
 cp -r common/releasenotes/ja/code-style-guides i18n/ja/docusaurus-plugin-content-docs/version-2.5/developers/
 cp common/releasenotes/ja/debuginfo.md i18n/ja/docusaurus-plugin-content-docs/version-2.5/developers/
-cp common/releasenotes/ja/versions.md i18n/ja/docusaurus-plugin-content-docs/version-2.5/developers/
 cp -r common/releasenotes/ja/development-environment i18n/ja/docusaurus-plugin-content-docs/version-2.5/developers/
 cp -r common/releasenotes/ja/trace-tools i18n/ja/docusaurus-plugin-content-docs/version-2.5/developers/
