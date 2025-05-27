@@ -338,7 +338,7 @@ export default function Features({language}) {
       </section>
     );
   }
-  if (language == "Japanese") {
+  else if (language == "Japanese") {
     return (
       <section className={styles.features}>
         <div className="container">
