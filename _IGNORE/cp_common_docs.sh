@@ -50,6 +50,24 @@ mkdir -p i18n/ja/docusaurus-plugin-content-docs/version-3.1/developers/
 mkdir -p i18n/ja/docusaurus-plugin-content-docs/version-2.5/developers/
 
 
+cp versioned_docs/version-3.5/_assets/visualized_heap_profile.png i18n/ja/docusaurus-plugin-content-docs/version-3.5/_assets/
+cp versioned_docs/version-3.5/_assets/visualized_heap_profile.png i18n/ja/docusaurus-plugin-content-docs/version-3.4/_assets/
+cp versioned_docs/version-3.5/_assets/visualized_heap_profile.png i18n/ja/docusaurus-plugin-content-docs/version-3.3/_assets/
+cp versioned_docs/version-3.5/_assets/visualized_heap_profile.png i18n/ja/docusaurus-plugin-content-docs/version-3.2/_assets/
+cp versioned_docs/version-3.5/_assets/visualized_heap_profile.png i18n/ja/docusaurus-plugin-content-docs/version-3.1/_assets/
+cp versioned_docs/version-3.5/_assets/visualized_heap_profile.png i18n/ja/docusaurus-plugin-content-docs/version-2.5/_assets/
+cp versioned_docs/version-3.5/_assets/visualized_heap_profile.png versioned_docs/version-3.4/_assets/
+cp versioned_docs/version-3.5/_assets/visualized_heap_profile.png versioned_docs/version-3.3/_assets/
+cp versioned_docs/version-3.5/_assets/visualized_heap_profile.png versioned_docs/version-3.2/_assets/
+cp versioned_docs/version-3.5/_assets/visualized_heap_profile.png versioned_docs/version-3.1/_assets/
+cp versioned_docs/version-3.5/_assets/visualized_heap_profile.png versioned_docs/version-2.5/_assets/
+cp versioned_docs/version-3.5/_assets/visualized_heap_profile.png i18n/zh/docusaurus-plugin-content-docs/version-3.5/_assets/
+cp versioned_docs/version-3.5/_assets/visualized_heap_profile.png i18n/zh/docusaurus-plugin-content-docs/version-3.4/_assets/
+cp versioned_docs/version-3.5/_assets/visualized_heap_profile.png i18n/zh/docusaurus-plugin-content-docs/version-3.3/_assets/
+cp versioned_docs/version-3.5/_assets/visualized_heap_profile.png i18n/zh/docusaurus-plugin-content-docs/version-3.2/_assets/
+cp versioned_docs/version-3.5/_assets/visualized_heap_profile.png i18n/zh/docusaurus-plugin-content-docs/version-3.1/_assets/
+cp versioned_docs/version-3.5/_assets/visualized_heap_profile.png i18n/zh/docusaurus-plugin-content-docs/version-2.5/_assets/
+
 cp versioned_docs/version-3.5/_assets/debug_info.png i18n/ja/docusaurus-plugin-content-docs/version-3.5/_assets/
 cp versioned_docs/version-3.5/_assets/debug_info.png i18n/ja/docusaurus-plugin-content-docs/version-3.4/_assets/
 cp versioned_docs/version-3.5/_assets/debug_info.png i18n/ja/docusaurus-plugin-content-docs/version-3.3/_assets/
@@ -163,3 +181,12 @@ cp -r i18n/ja/docusaurus-plugin-content-docs/version-3.5/developers/* i18n/ja/do
 cp -r i18n/ja/docusaurus-plugin-content-docs/version-3.5/developers/* i18n/ja/docusaurus-plugin-content-docs/version-3.1/developers/
 cp -r i18n/ja/docusaurus-plugin-content-docs/version-3.5/developers/* i18n/ja/docusaurus-plugin-content-docs/version-2.5/developers/
 
+rm versioned_docs/version-3.2/developers/versions.md
+rm versioned_docs/version-3.1/developers/versions.md
+rm versioned_docs/version-2.5/developers/versions.md
+rm i18n/zh/docusaurus-plugin-content-docs/version-3.2/developers/versions.md
+rm i18n/zh/docusaurus-plugin-content-docs/version-3.1/developers/versions.md
+rm i18n/zh/docusaurus-plugin-content-docs/version-2.5/developers/versions.md
+rm i18n/ja/docusaurus-plugin-content-docs/version-3.2/developers/versions.md
+rm i18n/ja/docusaurus-plugin-content-docs/version-3.1/developers/versions.md
+rm i18n/ja/docusaurus-plugin-content-docs/version-2.5/developers/versions.md
