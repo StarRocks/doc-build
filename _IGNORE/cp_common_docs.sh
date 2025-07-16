@@ -1,5 +1,9 @@
 #!/bin/bash
 
+rm -rf versioned_docs/version-*/release_notes versioned_docs/version-*/developers
+rm -rf i18n/zh/docusaurus-plugin-content-docs/version-*/release_notes i18n/zh/docusaurus-plugin-content-docs/version-*/developers
+rm -rf i18n/ja/docusaurus-plugin-content-docs/version-*/release_notes i18n/ja/docusaurus-plugin-content-docs/version-*/developers
+
 mkdir -p releasenotes
 mkdir -p common
 
@@ -45,9 +49,6 @@ mkdir -p i18n/ja/docusaurus-plugin-content-docs/version-3.2/developers/
 mkdir -p i18n/ja/docusaurus-plugin-content-docs/version-3.1/developers/
 mkdir -p i18n/ja/docusaurus-plugin-content-docs/version-2.5/developers/
 
-rm -rf versioned_docs/version-*/release_notes versioned_docs/version-*/developers
-rm -rf i18n/zh/docusaurus-plugin-content-docs/version-*/release_notes i18n/zh/docusaurus-plugin-content-docs/version-*/developers
-rm -rf i18n/ja/docusaurus-plugin-content-docs/version-*/release_notes i18n/ja/docusaurus-plugin-content-docs/version-*/developers
 
 cp versioned_docs/version-3.5/_assets/debug_info.png i18n/ja/docusaurus-plugin-content-docs/version-3.5/_assets/
 cp versioned_docs/version-3.5/_assets/debug_info.png i18n/ja/docusaurus-plugin-content-docs/version-3.4/_assets/
