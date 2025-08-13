@@ -6,12 +6,6 @@
 
 import {themes as prismThemes} from 'prism-react-renderer';
 import versions from './versions.json';
-import VersionsArchived from './versionsArchived.json';
-
-const ArchivedVersionsDropdownItems = Object.entries(VersionsArchived).splice(
-  0,
-  5,
-);
 
 // Used to limit build to just two versions for debugging
 const isBuildFast = !!process.env.BUILD_FAST;
