@@ -6,6 +6,12 @@
 
 import {themes as prismThemes} from 'prism-react-renderer';
 import versions from './versions.json';
+import VersionsArchived from './versionsArchived.json';
+
+const ArchivedVersionsDropdownItems = Object.entries(VersionsArchived).splice(
+  0,
+  5,
+);
 
 // Used to limit build to just two versions for debugging
 const isBuildFast = !!process.env.BUILD_FAST;
@@ -91,14 +97,14 @@ const config = {
             }
           })(),
 
-          //onlyIncludeVersions: ['3.5', '3.4', '3.3', 3.2', '3.1', '2.5'],
+          //onlyIncludeVersions: ['3.5', '3.4', '3.3', 3.2', '3.1'],
           onlyIncludeVersions: (() => {
             if (isVersioningDisabled) {
               return ['current'];
             } else if (isBuildFast){
               return [...versions.slice(0, 1)];
             } else {
-              return ['3.5', '3.4', '3.3', '3.2', '3.1', '2.5'];
+              return ['3.5', '3.4', '3.3', '3.2', '3.1'];
             }
           })(),
 
@@ -112,7 +118,6 @@ const config = {
                 '3.3': { label: 'Stable-3.3', banner: 'none' },
                 '3.2': { label: '3.2', banner: 'none' },
                 '3.1': { label: '3.1', banner: 'none' },
-                '2.5': { label: '2.5', banner: 'none' },
               };
             }
           })(),
@@ -194,7 +199,23 @@ const config = {
             type: 'docsVersionDropdown',
             docsPluginId: 'default',
             position: 'left',
-          },
+            dropdownActiveClassDisabled: true,
+            dropdownItemsAfter: [
+              {
+                type: 'html',
+                value: '<hr class="dropdown-separator">',
+              },
+              {
+                type: 'html',
+                className: 'dropdown-archived-versions',
+                value: '<b>Archived versions</b>',
+              },
+              {
+                href: 'https://www.starrocks.io/download/community#archived-docs',
+                label: '2.5',
+              },
+            ],
+          },    
           {
             type: 'localeDropdown',
             docsPluginId: 'default',
