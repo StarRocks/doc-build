@@ -8,6 +8,14 @@
         {
           "type": "category",
           "collapsible": "false",
+          "label": "StarRocks version 4.x",
+          "items": [
+            "release-4.0"
+          ]
+        },
+        {
+          "type": "category",
+          "collapsible": "false",
           "label": "StarRocks version 3.x",
           "items": [
             "release-3.5",
@@ -30,7 +38,14 @@
             "release-2.0"
           ]
         },
-        "release-1.19"
+        {
+          "type": "category",
+          "collapsible": "false",
+          "label": "StarRocks version 1.x",
+          "items": [
+            "release-1.19"
+          ]
+        }
       ]
     },
     {
