@@ -153,14 +153,14 @@ mv common/releasenotes/zh-cn/*or.md i18n/zh/docusaurus-plugin-content-docs-relea
 mv common/releasenotes/ja/release*.md i18n/ja/docusaurus-plugin-content-docs-releasenotes/current/
 mv common/releasenotes/ja/*or.md i18n/ja/docusaurus-plugin-content-docs-releasenotes/current/
 
-cp -r common/releasenotes/en-us/build-starrocks versioned_docs/version-3.5/developers/
-cp -r common/releasenotes/en-us/code-style-guides versioned_docs/version-3.5/developers/
-cp common/releasenotes/en-us/debuginfo.md versioned_docs/version-3.5/developers/
-cp -r common/releasenotes/en-us/development-environment versioned_docs/version-3.5/developers/
-cp common/releasenotes/en-us/How_to_Contribute.md versioned_docs/version-3.5/developers/
-cp common/releasenotes/en-us/jemalloc_heap_profile.md versioned_docs/version-3.5/developers/
-cp -r common/releasenotes/en-us/trace-tools versioned_docs/version-3.5/developers/
-cp common/releasenotes/en-us/versions.md versioned_docs/version-3.5/developers/
+cp -r common/releasenotes/en-us/build-starrocks versioned_docs/version-4.0/developers/
+cp -r common/releasenotes/en-us/code-style-guides versioned_docs/version-4.0/developers/
+cp common/releasenotes/en-us/debuginfo.md versioned_docs/version-4.0/developers/
+cp -r common/releasenotes/en-us/development-environment versioned_docs/version-4.0/developers/
+cp common/releasenotes/en-us/How_to_Contribute.md versioned_docs/version-4.0/developers/
+cp common/releasenotes/en-us/jemalloc_heap_profile.md versioned_docs/version-4.0/developers/
+cp -r common/releasenotes/en-us/trace-tools versioned_docs/version-4.0/developers/
+cp common/releasenotes/en-us/versions.md versioned_docs/version-4.0/developers/
 
 cp -r versioned_docs/version-4.0/developers/* versioned_docs/version-3.5/developers/
 cp -r versioned_docs/version-4.0/developers/* versioned_docs/version-3.4/developers/
