@@ -291,7 +291,7 @@ const config = {
           },
       announcementBar: {
         // content: `⭐️ If you like Docusaurus, give it a star on <a target="_blank" rel="noopener noreferrer" href="https://github.com/facebook/docusaurus">GitHub</a> and follow us on <a target="_blank" rel="noopener noreferrer" href="https://x.com/docusaurus">X ${TwitterSvg}</a>`,
-        content: `🎉️ <b><a target="_blank" href="https://summit.starrocks.io/2025">StarRocks Summit 2025 is September 10th</a></b> 🎉️`,
+	    content: `🎉️ <b><a target="_blank" href="https://summit.starrocks.io/2025">Watch on demand: StarRocks Summit 2025</a></b> 🎉️`,
         backgroundColor: '#111F64',
         textColor: '#ffffff',
         isCloseable: true,
