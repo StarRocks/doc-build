@@ -1,17 +1,23 @@
 
 User-agent: *
-Disallow: /docs/assets/
-Disallow: /zh/docs/assets/
+Disallow: /docs/4.*/
 Disallow: /docs/3.*/
 Disallow: /docs/2.5/
+Disallow: /zh/docs/4.*/
 Disallow: /zh/docs/3.*/
 Disallow: /zh/docs/2.5/
+Disallow: /ja/docs/4.*/
+Disallow: /ja/docs/3.*/
+Disallow: /ja/docs/2.5/
 
 User-agent: Googlebot
-Disallow: /docs/assets/
 Disallow: /zh/
+Disallow: /docs/4.*/
 Disallow: /docs/3.*/
 Disallow: /docs/2.5/
+Disallow: /ja/docs/4.*/
+Disallow: /ja/docs/3.*/
+Disallow: /ja/docs/2.5/
 
 User-Agent: Algolia Crawler
 Allow: /
