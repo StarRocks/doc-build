@@ -1,5 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
+import { glob } from "glob";
 
 /**
  * Inline snippet imports recursively
@@ -48,13 +49,11 @@ async function processFile(filePath) {
  * Walk directory, process all .mdx files
  */
 async function main() {
-  const docsDir = "/Users/droscign/GitHub/starrocks/docs/en/quick_start";
-  const files = (await fs.readdir(docsDir)).filter((f) => f.endsWith(".md") || f.endsWith(".mdx"));
-
+  //const docsDir = "/Users/droscign/GitHub/starrocks/docs/";
+  const files = await glob('/Users/droscign/GitHub/starrocks/docs/{en,zh,ja}/**/*.{md,mdx}', { ignore: '_assets/**' })
   for (const file of files) {
-    const filePath = path.join(docsDir, file);
-    console.log(`Processing ${filePath}...`);
-    await processFile(filePath);
+    console.log(`Processing ${file}...`);
+    await processFile(file);
   }
 }
 
