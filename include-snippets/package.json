@@ -1,0 +1,14 @@
+{
+  "name": "include-snippets",
+  "version": "1.0.0",
+  "description": "Embed doc snippets from assets dir into docs",
+  "license": "Apache-2.0",
+  "author": "",
+  "type": "module",
+  "main": "include-snippets.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+  }
+}
