@@ -31,19 +31,7 @@
           "collapsible": "false",
           "label": "StarRocks version 2.x",
           "items": [
-            "release-2.5",
-            "release-2.3",
-            "release-2.2",
-            "release-2.1",
-            "release-2.0"
-          ]
-        },
-        {
-          "type": "category",
-          "collapsible": "false",
-          "label": "StarRocks version 1.x",
-          "items": [
-            "release-1.19"
+            "release-2.5"
           ]
         }
       ]
