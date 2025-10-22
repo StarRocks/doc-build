@@ -1,6 +1,14 @@
 name: __Stage__Deploy_docusaurus
 on:
   workflow_dispatch:
+   inputs:
+      docbuildbranch:
+        description: 'doc-build branch to build with'     
+        required: true
+        default: 'main'
+        type: string
+
+
   schedule:
     - cron: "5 9 * * 1-5"
 env:
@@ -8,11 +16,13 @@ env:
   AWS_SECRET: ${{ secrets.AWS_SECRET }}
 jobs:
   stage_deploy:
+    env:
+      INPUTS_BRANCH: "${{ inputs.docbuildbranch }}"
     runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v3
         with:
-          ref: 'main'
+          ref: ${{ env.INPUTS_BRANCH }}
 
       - uses: actions/setup-node@v3
         with:
