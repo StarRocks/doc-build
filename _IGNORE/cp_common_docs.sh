@@ -144,13 +144,19 @@ cp versioned_docs/version-4.0/_assets/ide*.png i18n/ja/docusaurus-plugin-content
 cp versioned_docs/version-4.0/_assets/ide*.png i18n/ja/docusaurus-plugin-content-docs/version-3.1/_assets/
 cp versioned_docs/version-4.0/_assets/ide*.png i18n/ja/docusaurus-plugin-content-docs/version-2.5/_assets/
 
-mv common/releasenotes/en-us/release*.md releasenotes/
+mv common/releasenotes/en-us/release-4*.md releasenotes/
+mv common/releasenotes/en-us/release-3*.md releasenotes/
+mv common/releasenotes/en-us/release-2.5.md releasenotes/
 mv common/releasenotes/en-us/*or.md releasenotes/
 
-mv common/releasenotes/zh-cn/release*.md i18n/zh/docusaurus-plugin-content-docs-releasenotes/current/
+mv common/releasenotes/zh-cn/release-4*.md i18n/zh/docusaurus-plugin-content-docs-releasenotes/current/
+mv common/releasenotes/zh-cn/release-3*.md i18n/zh/docusaurus-plugin-content-docs-releasenotes/current/
+mv common/releasenotes/zh-cn/release-2.5.md i18n/zh/docusaurus-plugin-content-docs-releasenotes/current/
 mv common/releasenotes/zh-cn/*or.md i18n/zh/docusaurus-plugin-content-docs-releasenotes/current/
 
-mv common/releasenotes/ja/release*.md i18n/ja/docusaurus-plugin-content-docs-releasenotes/current/
+mv common/releasenotes/ja/release-4*.md i18n/ja/docusaurus-plugin-content-docs-releasenotes/current/
+mv common/releasenotes/ja/release-3*.md i18n/ja/docusaurus-plugin-content-docs-releasenotes/current/
+mv common/releasenotes/ja/release-2.5.md i18n/ja/docusaurus-plugin-content-docs-releasenotes/current/
 mv common/releasenotes/ja/*or.md i18n/ja/docusaurus-plugin-content-docs-releasenotes/current/
 
 cp -r common/releasenotes/en-us/build-starrocks versioned_docs/version-4.0/developers/
