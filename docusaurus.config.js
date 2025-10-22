@@ -96,7 +96,7 @@ const config = {
             if (isVersioningDisabled) {
               return ['current'];
             } else if (isBuildFast){
-              return [...versions.slice(0, 1)];
+              return [...versions.slice(0, 2)];
             } else {
               return ['4.0', '3.5', '3.4', '3.3', '3.2', '3.1', '2.5'];
             }
