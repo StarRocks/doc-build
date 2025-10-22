@@ -10,7 +10,7 @@ on:
       docVersionsToBuild:
         description: 'Build two recent doc versions, or all?'
         required: true
-        default: 'main'
+        default: 'TopTwo'
         options: 
         - TopTwo
         - All
