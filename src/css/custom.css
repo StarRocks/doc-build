@@ -39,14 +39,14 @@ img {
   height: auto;
 }
 
-p {
+/*p {
     color: var(--ifm-font-color-base);
 }
 
 a {
     color: #347e8d;
 }
-
+*/
 .header-github-link::before {
   content: '';
   width: 24px;
@@ -98,6 +98,131 @@ div[class^='announcementBar_'] {
   font-size: 20px;
 }
 
+.copilotKitWindow {
+  bottom: 5rem;
+  right: 1rem;
+  top: auto;
+  left: auto;
+  border-width: 0px;
+  margin-bottom: 1rem;
+  max-width: calc(100% - 2rem) !important;
+  max-height: calc(100% - 10rem) !important;
+  min-width: 60% !important;
+  min-height: 60% !important;
+  width: fit-content !important;
+  height: fit-content !important;
+  overflow: auto;
+  resize: none;
+}
+
+.copilotKitInputControlButton {
+  padding: 0;
+  cursor: pointer;
+  transition-property: transform;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
+  transform: scale(1);
+  color: rgba(0, 0, 0, 0.25);
+  -webkit-appearance: button;
+  appearance: button;
+  background-color: transparent;
+  background-image: none;
+  text-transform: none;
+  font-family: inherit;
+  font-size: 100%;
+  font-weight: inherit;
+  line-height: inherit;
+  border: 0;
+  margin: 0;
+  text-indent: 0px;
+  text-shadow: none;
+  display: inline-block;
+  text-align: center;
+  width: 24px;
+  height: 24px;
+}
+
+.copilotKitInputControlButton:not([disabled]) {
+  color: var(--copilot-kit-primary-color);
+}
+
+.copilotKitInputControlButton:not([disabled]):hover {
+  color: color-mix(in srgb, var(--copilot-kit-primary-color) 80%, black);
+  transform: scale(1.05);
+}
+
+.copilotKitInputControlButton[disabled] {
+  color: var(--copilot-kit-muted-color);
+  cursor: default;
+}
+
+/* this sets the text in dark mode. This is 
+ * necessary because the CopilotKit chat 
+ * widget sets the text color to charcoal
+ * grey #454545
+[data-theme='dark'] .markdown {
+  color: white !important;
+}
+*/
+
+.copilotKitWindow {
+  bottom: 5rem;
+  right: 1rem;
+  top: auto;
+  left: auto;
+  border-width: 0px;
+  margin-bottom: 1rem;
+  max-width: calc(100% - 2rem) !important;
+  max-height: calc(100% - 10rem) !important;
+  min-width: 60% !important;
+  min-height: 60% !important;
+  width: fit-content !important;
+  height: fit-content !important;
+  overflow: auto;
+  resize: none;
+}
+
+.copilotKitInputControlButton {
+  padding: 0;
+  cursor: pointer;
+  transition-property: transform;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
+  transform: scale(1);
+  color: rgba(0, 0, 0, 0.25);
+  -webkit-appearance: button;
+  appearance: button;
+  background-color: transparent;
+  background-image: none;
+  text-transform: none;
+  font-family: inherit;
+  font-size: 100%;
+  font-weight: inherit;
+  line-height: inherit;
+  border: 0;
+  margin: 0;
+  text-indent: 0px;
+  text-shadow: none;
+  display: inline-block;
+  text-align: center;
+  width: 24px;
+  height: 24px;
+}
+
+.copilotKitInputControlButton:not([disabled]) {
+  color: var(--copilot-kit-primary-color);
+}
+
+.copilotKitInputControlButton:not([disabled]):hover {
+  color: color-mix(in srgb, var(--copilot-kit-primary-color) 80%, black);
+  transform: scale(1.05);
+}
+
+.copilotKitInputControlButton[disabled] {
+  color: var(--copilot-kit-muted-color);
+  cursor: default;
+}
+
 /* When we generate PDF files:
  
  - avoid breaks in the middle of:
@@ -121,3 +246,4 @@ div[class^='announcementBar_'] {
         display: none;
     }
 }
+

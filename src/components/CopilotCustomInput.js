@@ -56,7 +56,7 @@ export function CopilotCustomInput({inProgress, onSend, isVisible, costInfo, onR
                 <textarea
                     ref={textareaRef}
                     disabled={inProgress}
-                    placeholder="Type your message here... (Press Ctrl+Enter to send)"
+                    placeholder="Ask here...Remember to test AI generated responses on non-production systems (Press Ctrl+Enter to send)"
                     style={{
                         flex: 1,
                         padding: "8px",

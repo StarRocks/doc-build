@@ -1,0 +1,14 @@
+@import "./copilotkit/colors.css";
+@import "./copilotkit/popup.css";
+@import "./copilotkit/sidebar.css";
+@import "./copilotkit/button.css";
+@import "./copilotkit/header.css";
+@import "./copilotkit/input.css";
+@import "./copilotkit/messages.css";
+@import "./copilotkit/window.css";
+/*@import "./copilotkit/animations.css"; */
+/*@import "./copilotkit/markdown.css"; */
+/*@import "./copilotkit/suggestions.css";*/
+/*@import "./copilotkit/panel.css";*/
+@import "./copilotkit/console.css";
+@import "./copilotkit/crew.css";

@@ -1,7 +1,7 @@
 import React from "react";
 import { CopilotKit } from "@copilotkit/react-core";
 import { CopilotPopup } from "@copilotkit/react-ui";
-import "@copilotkit/react-ui/styles.css";
+import "@site/src/css/copilotkit.css";
 import clsx from "clsx";
 import ErrorBoundary from "@docusaurus/ErrorBoundary";
 import { PageMetadata, SkipToContentFallbackId, ThemeClassNames } from "@docusaurus/theme-common";
@@ -107,7 +107,7 @@ export default function Layout(props) {
             initial:
               "AI generated answers are based on docs and other sources. Please test answers in non-production environments.",
           }}
-          defaultOpen={true}
+          defaultOpen={false}
           markdownTagRenderers={createMarkdownTagRenderers()}
           RenderActionExecutionMessage={MyRenderActionExecutionMessage}
           Input={(props) => (
