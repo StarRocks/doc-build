@@ -56,7 +56,7 @@ export function CopilotCustomInput({inProgress, onSend, isVisible, costInfo, onR
                 <textarea
                     ref={textareaRef}
                     disabled={inProgress}
-                    placeholder="Ask here ... (Press Ctrl+Enter to send) ... Powered by CopilotKit"
+                    placeholder="Ask here ... (Press Ctrl+Enter to send) ... Sponsored by CelerData ... Powered by CopilotKit"
                     style={{
                         flex: 1,
                         padding: "8px",
