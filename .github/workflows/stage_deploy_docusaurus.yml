@@ -70,8 +70,8 @@ jobs:
         run:  |
           export NODE_OPTIONS="--max_old_space_size=15360"
           export DOCUSAURUS_IGNORE_SSG_WARNINGS=true
-          if [[ $INPUTS_VERSIONS == 'TopTwo' ]];
-            then export BUILD_FAST=true
+          if [[ $INPUTS_VERSIONS == 'TopTwo' ]]; then
+            export BUILD_FAST=true
           fi
           yarn build
 
