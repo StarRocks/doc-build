@@ -25,8 +25,8 @@ env:
 jobs:
   stage_deploy:
     env:
-      INPUTS_BRANCH: "${{ inputs.docBuildBranch }}"
-      INPUTS_VERSIONS: "${{ inputs.docVersionsToBuild }}"
+      INPUTS_BRANCH: "${{ inputs.docBuildBranch || 'main' }}"
+      INPUTS_VERSIONS: "${{ inputs.docVersionsToBuild || 'All' }}"
     runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v3
