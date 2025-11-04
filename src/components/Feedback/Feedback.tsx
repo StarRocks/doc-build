@@ -149,3 +149,8 @@ export const Feedback = ({ metadata }: { metadata: any }) => {
     </div>
   );
 };
+
+declare module '*.module.css' {
+  const classes: { [key: string]: string };
+  export default classes;
+}
