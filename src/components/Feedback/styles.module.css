@@ -1,9 +1,12 @@
+ 
+/* feedback-background-color is defined in the file src/css/custom.css */
+
  .feedback {
 	 height: 100%;
 	 padding: 20px;
 	 text-align: center;
 	 width: 100%;
-	 background-color: rgb(242, 245, 247);
+	 background-color: var(--feedback-background-color) !important;
 	 margin-top: 2rem;
 	 border-radius: 8px;
 }
@@ -50,7 +53,7 @@
 	 /* background of text area */
 	 background-color: var(--ifm-code-background);
 
-	 border: red solid blue;
+	 border: 1px red solid blue;
 
 	 border-radius: 6px;
 	 font-size: 1.1rem;
@@ -126,3 +129,4 @@
 	 transform: translateY(-3px) scale(1.1);
 	 transform-origin: center center;
 }
+
