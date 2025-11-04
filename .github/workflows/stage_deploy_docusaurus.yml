@@ -11,7 +11,7 @@ on:
         description: 'Build two recent doc versions, or all?'
         required: true
         default: 'TopTwo'
-        options: 
+        options: [TopTwo, All] 
         - TopTwo
         - All
         type: choice
