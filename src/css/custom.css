@@ -148,15 +148,6 @@ div[class^='announcementBar_'] {
   cursor: default;
 }
 
-/* this sets the text in dark mode. This is 
- * necessary because the CopilotKit chat 
- * widget sets the text color to charcoal
- * grey #454545
-[data-theme='dark'] .markdown {
-  color: white !important;
-}
-*/
-
 .copilotKitWindow {
   bottom: 5rem;
   right: 1rem;
