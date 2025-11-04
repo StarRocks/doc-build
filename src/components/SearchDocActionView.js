@@ -101,7 +101,7 @@ export const SearchDocActionView = memo(function SearchDocActionView(props) {
                                         </div>
                                         <div className="text-xs text-indigo-700 mt-1 flex items-center gap-2 min-w-0">
                                             <span className="truncate" title={`Query: "${docSearchArtifact.query}"`}>
-                                                Query: &quot;{docSearchArtifact.query}&quot;
+                                                Query: "{docSearchArtifact.query}"
                                             </span>
                                             <span className="flex-shrink-0">
                                                 • {docSearchArtifact.duration.toFixed(2)}s
