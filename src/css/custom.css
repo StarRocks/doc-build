@@ -6,15 +6,16 @@
 
 /* You can override the default Infima variables here. */
 :root {
-  --ifm-color-primary: #2e8555;
-  --ifm-color-primary-dark: #29784c;
+  --ifm-color-primary: #2E8555;
+  --ifm-color-primary-dark: #29784C;
   --ifm-color-primary-darker: #277148;
-  --ifm-color-primary-darkest: #205d3b;
-  --ifm-color-primary-light: #33925d;
+  --ifm-color-primary-darkest: #205D3B;
+  --ifm-color-primary-light: #33925D;
   --ifm-color-primary-lighter: #359962;
-  --ifm-color-primary-lightest: #3cad6e;
+  --ifm-color-primary-lightest: #3CAD6E;
   --ifm-code-font-size: 95%;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+  --feedback-background-color: #F2F5F7;
 }
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
@@ -27,15 +28,15 @@
   --ifm-color-primary-lighter: #32d8b4;
   --ifm-color-primary-lightest: #4fddbf;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+  --ifm-heading-color: white !important;
+  --ifm-color-content: white !important;
+  --ifm-font-color-base: white !important;
+  --feedback-background-color: #72A5C7;
 }
 
 img {
   width: auto;
   height: auto;
-}
-
-a {
-    color: #347e8d;
 }
 
 .header-github-link::before {
@@ -89,6 +90,81 @@ div[class^='announcementBar_'] {
   font-size: 20px;
 }
 
+.copilotKitWindow {
+  bottom: 5rem;
+  right: 1rem;
+  top: auto;
+  left: auto;
+  border-width: 0px;
+  margin-bottom: 1rem;
+  max-width: calc(100% - 2rem) !important;
+  max-height: calc(100% - 10rem) !important;
+  min-width: 60% !important;
+  min-height: 60% !important;
+  width: fit-content !important;
+  height: fit-content !important;
+  overflow: auto;
+  resize: none;
+}
+
+.copilotKitInputControlButton {
+  padding: 0;
+  cursor: pointer;
+  transition-property: transform;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
+  transform: scale(1);
+  color: rgba(0, 0, 0, 0.25);
+  -webkit-appearance: button;
+  appearance: button;
+  background-color: transparent;
+  background-image: none;
+  text-transform: none;
+  font-family: inherit;
+  font-size: 100%;
+  font-weight: inherit;
+  line-height: inherit;
+  border: 0;
+  margin: 0;
+  text-indent: 0px;
+  text-shadow: none;
+  display: inline-block;
+  text-align: center;
+  width: 24px;
+  height: 24px;
+}
+
+.copilotKitInputControlButton:not([disabled]) {
+  color: var(--copilot-kit-primary-color);
+}
+
+.copilotKitInputControlButton:not([disabled]):hover {
+  color: color-mix(in srgb, var(--copilot-kit-primary-color) 80%, black);
+  transform: scale(1.05);
+}
+
+.copilotKitInputControlButton[disabled] {
+  color: var(--copilot-kit-muted-color);
+  cursor: default;
+}
+
+.copilotKitWindow {
+  bottom: 5rem;
+  right: 1rem;
+  top: auto;
+  left: auto;
+  border-width: 0px;
+  margin-bottom: 1rem;
+  max-width: calc(100% - 2rem) !important;
+  max-height: calc(100% - 10rem) !important;
+  min-width: 60% !important;
+  min-height: 60% !important;
+  width: fit-content !important;
+  height: fit-content !important;
+  overflow: auto;
+  resize: none;
+}
+
 /* When we generate PDF files:
  
  - avoid breaks in the middle of:
@@ -112,3 +188,4 @@ div[class^='announcementBar_'] {
         display: none;
     }
 }
+

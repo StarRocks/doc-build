@@ -1,6 +1,20 @@
 name: __Stage__Deploy_docusaurus
 on:
   workflow_dispatch:
+   inputs:
+      docBuildBranch:
+        description: 'doc-build branch to build with'     
+        required: true
+        default: 'main'
+        type: string
+      docVersionsToBuild:
+        description: 'Build two recent doc versions, or all?'
+        required: true
+        default: 'TopTwo'
+        options: [TopTwo, All] 
+        type: choice
+
+
   schedule:
     - cron: "5 9 * * 1-5"
 env:
@@ -8,11 +22,14 @@ env:
   AWS_SECRET: ${{ secrets.AWS_SECRET }}
 jobs:
   stage_deploy:
+    env:
+      INPUTS_BRANCH: "${{ inputs.docBuildBranch || 'main' }}"
+      INPUTS_VERSIONS: "${{ inputs.docVersionsToBuild || 'All' }}"
     runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v3
         with:
-          ref: 'main'
+          ref: ${{ env.INPUTS_BRANCH }}
 
       - uses: actions/setup-node@v3
         with:
@@ -51,6 +68,9 @@ jobs:
         run:  |
           export NODE_OPTIONS="--max_old_space_size=15360"
           export DOCUSAURUS_IGNORE_SSG_WARNINGS=true
+          if [[ $INPUTS_VERSIONS == 'TopTwo' ]]; then
+            export BUILD_FAST=true
+          fi
           yarn build
 
       - name: sync to S3
