@@ -55,7 +55,7 @@ export const SearchDocActionView = memo(function SearchDocActionView(props) {
             >
                 <Accordion.Item value="search-result" className="border border-indigo-200 rounded-lg bg-indigo-50">
                     <Accordion.Trigger
-                        className="flex w-full items-center justify-between px-4 py-3 text-left font-medium hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded-t-lg"
+                        className="flex w-full items-center justify-between px-4 py-3 text-left font-medium bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded-t-lg"
                     >
                         <div className="flex items-center gap-3 flex-1">
                             <MagnifyingGlassIcon className="h-5 w-5 text-indigo-600" />
@@ -87,7 +87,7 @@ export const SearchDocActionView = memo(function SearchDocActionView(props) {
                                                                     href={convertPathToUrl(doc.path, docSearchArtifact.doc_type)}
                                                                     target="_blank" 
                                                                     rel="noopener noreferrer"
-                                                                    className="text-xs text-indigo-500 hover:text-indigo-700 hover:underline flex-shrink-0"
+                                                                    className="text-xs text-indigo-700 underline flex-shrink-0"
                                                                     onClick={(e) => e.stopPropagation()}
                                                                     title={convertPathToUrl(doc.path, docSearchArtifact.doc_type)}
                                                                 >
@@ -101,7 +101,7 @@ export const SearchDocActionView = memo(function SearchDocActionView(props) {
                                         </div>
                                         <div className="text-xs text-indigo-700 mt-1 flex items-center gap-2 min-w-0">
                                             <span className="truncate" title={`Query: "${docSearchArtifact.query}"`}>
-                                                Query: "{docSearchArtifact.query}"
+                                                Query: &quot;{docSearchArtifact.query}&quot;
                                             </span>
                                             <span className="flex-shrink-0">
                                                 • {docSearchArtifact.duration.toFixed(2)}s
@@ -141,7 +141,7 @@ export const SearchDocActionView = memo(function SearchDocActionView(props) {
                                         <div>
                                             <button
                                                 onClick={() => toggleDocumentExpansion(index)}
-                                                className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 rounded-lg"
+                                                className="w-full flex items-center justify-between px-4 py-3 text-left bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 rounded-lg"
                                             >
                                                 <div className="flex items-center gap-3 flex-1">
                                                     <FileTextIcon className="h-4 w-4 text-indigo-600 flex-shrink-0" />
@@ -150,7 +150,7 @@ export const SearchDocActionView = memo(function SearchDocActionView(props) {
                                                             href={convertPathToUrl(doc.path, docSearchArtifact.doc_type)}
                                                             target="_blank" 
                                                             rel="noopener noreferrer"
-                                                            className="text-xs text-indigo-600 hover:text-indigo-800 hover:underline"
+                                                            className="text-xs text-indigo-800 underline"
                                                             onClick={(e) => e.stopPropagation()}
                                                         >
                                                             {doc.path}
