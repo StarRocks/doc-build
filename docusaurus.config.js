@@ -137,6 +137,7 @@ const config = {
   ],
   plugins: [
     'docusaurus-plugin-hubspot',
+    './src/plugins/tailwind-config.js',
     [
       "@docusaurus/plugin-content-docs",
       {

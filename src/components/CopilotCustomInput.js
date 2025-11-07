@@ -39,99 +39,101 @@ export function CopilotCustomInput({inProgress, onSend, isVisible, costInfo, onR
 
 
     return (
-        <div style={{
-            display: isVisible ? "block" : "none",
-            borderTop: "1px solid #eee"
-        }}>
+        <div id="tw-scope">
+          <div style={{
+              display: isVisible ? "block" : "none",
+              borderTop: "1px solid #eee"
+          }}>
 
 
-            {/* Input Controls */}
-            <div style={{
-                display: "flex",
-                alignItems: "flex-end",
-                gap: "10px",
-                padding: "10px"
-            }}>
-                {/* Text Input */}
-                <textarea
-                    ref={textareaRef}
-                    disabled={inProgress}
-                    placeholder="Ask here ... (Press Ctrl+Enter to send) ... Sponsored by CelerData ... Powered by CopilotKit"
-                    style={{
-                        flex: 1,
-                        padding: "8px",
-                        borderRadius: "4px",
-                        border: "1px solid #ccc",
-                        outline: "none",
-                        resize: "none",
-                        minHeight: "40px",
-                        maxHeight: "150px",
-                        overflow: "auto",
-                        fontFamily: "inherit",
-                        fontSize: "14px",
-                        lineHeight: "1.4"
-                    }}
-                    onInput={autoResizeTextarea}
-                    onKeyDown={(e) => {
-                        if (e.key === "Enter" && e.ctrlKey) {
-                            e.preventDefault();
-                            const value = e.currentTarget.value.trim();
-                            if (value) {
-                                onSend(value);
-                                e.currentTarget.value = "";
-                                autoResizeTextarea();
-                            }
-                        }
-                    }}
-                />
+              {/* Input Controls */}
+              <div style={{
+                  display: "flex",
+                  alignItems: "flex-end",
+                  gap: "10px",
+                  padding: "10px"
+              }}>
+                  {/* Text Input */}
+                  <textarea
+                      ref={textareaRef}
+                      disabled={inProgress}
+                      placeholder="Ask here ... (Press Ctrl+Enter to send) ... Sponsored by CelerData ... Powered by CopilotKit"
+                      style={{
+                          flex: 1,
+                          padding: "8px",
+                          borderRadius: "4px",
+                          border: "1px solid #ccc",
+                          outline: "none",
+                          resize: "none",
+                          minHeight: "40px",
+                          maxHeight: "150px",
+                          overflow: "auto",
+                          fontFamily: "inherit",
+                          fontSize: "14px",
+                          lineHeight: "1.4"
+                      }}
+                      onInput={autoResizeTextarea}
+                      onKeyDown={(e) => {
+                          if (e.key === "Enter" && e.ctrlKey) {
+                              e.preventDefault();
+                              const value = e.currentTarget.value.trim();
+                              if (value) {
+                                  onSend(value);
+                                  e.currentTarget.value = "";
+                                  autoResizeTextarea();
+                              }
+                          }
+                      }}
+                  />
 
-                {/* Send Button */}
-                <button
-                    disabled={inProgress}
-                    style={{
-                        padding: "8px 12px",
-                        border: "none",
-                        borderRadius: "4px",
-                        background: "#007bff",
-                        color: "white",
-                        cursor: "pointer",
-                    }}
-                    onClick={(e) => {
-                        const textarea = e.currentTarget.previousElementSibling;
-                        if (textarea && typeof window !== 'undefined') {
-                            const value = textarea.value.trim();
-                            if (value) {
-                                onSend(value);
-                                textarea.value = "";
-                                autoResizeTextarea();
-                            }
-                        }
-                    }}
-                >
-                    Send
-                </button>
+                  {/* Send Button */}
+                  <button
+                      disabled={inProgress}
+                      style={{
+                          padding: "8px 12px",
+                          border: "none",
+                          borderRadius: "4px",
+                          background: "#007bff",
+                          color: "white",
+                          cursor: "pointer",
+                      }}
+                      onClick={(e) => {
+                          const textarea = e.currentTarget.previousElementSibling;
+                          if (textarea && typeof window !== 'undefined') {
+                              const value = textarea.value.trim();
+                              if (value) {
+                                  onSend(value);
+                                  textarea.value = "";
+                                  autoResizeTextarea();
+                              }
+                          }
+                      }}
+                  >
+                      Send
+                  </button>
 
-                {/* Reset Chat Button */}
-                <button
-                    style={{
-                        padding: "8px 12px",
-                        border: "none",
-                        borderRadius: "4px",
-                        background: "#f44336",
-                        color: "white",
-                        cursor: "pointer",
-                    }}
-                    onClick={() => {
-                        setThreadId(crypto.randomUUID());
-                        resetChat();
-                        if (onReset) {
-                            onReset();
-                        }
-                    }}
-                >
-                    Reset
-                </button>
-            </div>
+                  {/* Reset Chat Button */}
+                  <button
+                      style={{
+                          padding: "8px 12px",
+                          border: "none",
+                          borderRadius: "4px",
+                          background: "#f44336",
+                          color: "white",
+                          cursor: "pointer",
+                      }}
+                      onClick={() => {
+                          setThreadId(crypto.randomUUID());
+                          resetChat();
+                          if (onReset) {
+                              onReset();
+                          }
+                      }}
+                  >
+                      Reset
+                  </button>
+              </div>
+          </div>
         </div>
     );
 }
