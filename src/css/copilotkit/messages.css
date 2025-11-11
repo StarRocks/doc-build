@@ -54,8 +54,10 @@
 }
 
 .copilotKitMessage.copilotKitUserMessage {
-  background: var(--copilot-kit-primary-color);
-  color: var(--copilot-kit-contrast-color);
+  /*background: var(--copilot-kit-primary-color);*/
+  background: #DBEDF1;
+  /*color: var(--copilot-kit-contrast-color);*/
+  color: black;
   margin-left: auto;
   white-space: pre-wrap;
   line-height: 1.75;

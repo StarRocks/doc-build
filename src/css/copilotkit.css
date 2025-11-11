@@ -5,3 +5,20 @@
 @import "./copilotkit/header.css";
 @import "./copilotkit/button.css";
 @import "./copilotkit/messages.css";
+
+.link-338393 {
+    color: #338393;
+    font-weight: 900;
+}
+
+.bg-F3F3F3 {
+    background-color: #F3F3F3;
+}
+
+.link-black {
+    color: black !important;
+}
+
+.text-black {
+    color: black;
+}
