@@ -93,7 +93,7 @@ export function CopilotCustomInput({inProgress, onSend, isVisible, costInfo, onR
                           padding: "8px 12px",
                           border: "none",
                           borderRadius: "4px",
-                          background: "#007bff",
+                          background: "#338393",
                           color: "white",
                           cursor: "pointer",
                       }}
@@ -118,8 +118,8 @@ export function CopilotCustomInput({inProgress, onSend, isVisible, costInfo, onR
                           padding: "8px 12px",
                           border: "none",
                           borderRadius: "4px",
-                          background: "#f44336",
-                          color: "white",
+                          background: "#FABF00",
+                          color: "black",
                           cursor: "pointer",
                       }}
                       onClick={() => {

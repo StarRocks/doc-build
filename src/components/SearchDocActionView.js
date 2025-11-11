@@ -53,33 +53,33 @@ export const SearchDocActionView = memo(function SearchDocActionView(props) {
                 value={expanded ? "search-result" : ""}
                 onValueChange={(value) => setExpanded(!!value)}
             >
-                <Accordion.Item value="search-result" className="border border-indigo-200 rounded-lg bg-indigo-50">
+                <Accordion.Item value="search-result" className="border border-indigo-200 rounded-lg bg-F3F3F3">
                     <Accordion.Trigger
-                        className="flex w-full items-center justify-between px-4 py-3 text-left font-medium bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded-t-lg"
+                        className="flex w-full items-center justify-between px-4 py-3 text-left font-medium bg-F3F3F3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded-t-lg"
                     >
                         <div className="flex items-center gap-3 flex-1">
-                            <MagnifyingGlassIcon className="h-5 w-5 text-indigo-600" />
+                            <MagnifyingGlassIcon className="h-5 w-5 text-black" />
                             <div className="flex flex-col items-start flex-1 min-w-0">
                                 {inProgress ? (
                                     <>
-                                        <span className="text-sm font-semibold text-indigo-900">
+                                        <span className="text-sm font-semibold text-black">
                                             Searching Documents...
                                         </span>
                                     </>
                                 ) : docSearchArtifact ? (
                                     <>
                                         <div className="flex items-center gap-3 w-full">
-                                            <span className="text-sm font-semibold text-indigo-900">
+                                            <span className="text-sm font-semibold text-black">
                                                 Search Results ({docSearchArtifact.docs?.length || 0} found)
                                             </span>
                                             {!expanded && docSearchArtifact.docs.length > 0 && (
-                                                <div className="flex items-center gap-2 text-xs text-indigo-600 min-w-0">
-                                                    <span className="text-indigo-500">•</span>
+                                                <div className="flex items-center gap-2 text-xs link-338393 min-w-0">
+                                                    <span className="text-black">•</span>
                                                     {docSearchArtifact.docs.map((doc, index) => {
                                                         const filename = doc.path.split('/').pop() || doc.path;
                                                         return (
                                                             <div key={index} className="flex items-center gap-1">
-                                                                {index > 0 && <span className="text-indigo-400">,</span>}
+                                                                {index > 0 && <span className="link-338393">,</span>}
                                                                 <span className="truncate max-w-32" title={filename}>
                                                                     {filename}
                                                                 </span>
@@ -87,7 +87,7 @@ export const SearchDocActionView = memo(function SearchDocActionView(props) {
                                                                     href={convertPathToUrl(doc.path, docSearchArtifact.doc_type)}
                                                                     target="_blank" 
                                                                     rel="noopener noreferrer"
-                                                                    className="text-xs text-indigo-700 underline flex-shrink-0"
+                                                                    className="text-xs link-338393 underline flex-shrink-0"
                                                                     onClick={(e) => e.stopPropagation()}
                                                                     title={convertPathToUrl(doc.path, docSearchArtifact.doc_type)}
                                                                 >
@@ -99,7 +99,7 @@ export const SearchDocActionView = memo(function SearchDocActionView(props) {
                                                 </div>
                                             )}
                                         </div>
-                                        <div className="text-xs text-indigo-700 mt-1 flex items-center gap-2 min-w-0">
+                                        <div className="text-xs text-black mt-1 flex items-center gap-2 min-w-0">
                                             <span className="truncate" title={`Query: "${docSearchArtifact.query}"`}>
                                                 Query: &quot;{docSearchArtifact.query}&quot;
                                             </span>
@@ -110,10 +110,10 @@ export const SearchDocActionView = memo(function SearchDocActionView(props) {
                                     </>
                                 ) : (
                                     <>
-                                        <span className="text-sm font-semibold text-indigo-900">
+                                        <span className="text-sm font-semibold text-black">
                                             Document Search
                                         </span>
-                                        <span className="text-xs text-indigo-700 mt-1">
+                                        <span className="text-xs text-black mt-1">
                                             No results available
                                         </span>
                                     </>
@@ -132,7 +132,7 @@ export const SearchDocActionView = memo(function SearchDocActionView(props) {
                                 <div className="flex items-center justify-center py-8">
                                     <div className="flex items-center gap-3">
                                         <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-indigo-600"></div>
-                                        <span className="text-sm text-indigo-600">Searching documentation...</span>
+                                        <span className="text-sm text-black">Searching documentation...</span>
                                     </div>
                                 </div>
                             ) : docSearchArtifact && docSearchArtifact.docs && docSearchArtifact.docs.length > 0 ? (
@@ -144,13 +144,13 @@ export const SearchDocActionView = memo(function SearchDocActionView(props) {
                                                 className="w-full flex items-center justify-between px-4 py-3 text-left bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 rounded-lg"
                                             >
                                                 <div className="flex items-center gap-3 flex-1">
-                                                    <FileTextIcon className="h-4 w-4 text-indigo-600 flex-shrink-0" />
+                                                    <FileTextIcon className="h-4 w-4 text-black flex-shrink-0" />
                                                     <div className="flex-1 min-w-0">
                                                         <a
                                                             href={convertPathToUrl(doc.path, docSearchArtifact.doc_type)}
                                                             target="_blank" 
                                                             rel="noopener noreferrer"
-                                                            className="text-xs text-indigo-800 underline"
+                                                            className="text-xs link-338393 underline"
                                                             onClick={(e) => e.stopPropagation()}
                                                         >
                                                             {doc.path}
