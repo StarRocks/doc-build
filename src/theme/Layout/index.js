@@ -61,7 +61,11 @@ const CustomHeader = () => {
         />
         <span className="font-medium">{labels.title}</span>
       </div>
-      <button onClick={() => setOpen(false)} className="text-xl leading-none">
+      <button
+        onClick={() => setOpen(false)}
+        className="text-xl leading-none"
+        aria-label="Close chat"
+      >
         ×
       </button>
     </div>
