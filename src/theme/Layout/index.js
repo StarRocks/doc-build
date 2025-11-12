@@ -1,10 +1,15 @@
 import React from "react";
+import useBaseUrl from "@docusaurus/useBaseUrl";
 import { CopilotKit } from "@copilotkit/react-core";
-import { CopilotPopup } from "@copilotkit/react-ui";
+import { CopilotPopup, useChatContext } from "@copilotkit/react-ui";
 import "@site/src/css/copilotkit.css";
 import clsx from "clsx";
 import ErrorBoundary from "@docusaurus/ErrorBoundary";
-import { PageMetadata, SkipToContentFallbackId, ThemeClassNames } from "@docusaurus/theme-common";
+import {
+  PageMetadata,
+  SkipToContentFallbackId,
+  ThemeClassNames,
+} from "@docusaurus/theme-common";
 import { useKeyboardNavigation } from "@docusaurus/theme-common/internal";
 import SkipToContent from "@theme/SkipToContent";
 import AnnouncementBar from "@theme/AnnouncementBar";
@@ -43,6 +48,28 @@ const createMarkdownTagRenderers = (originalRenderers = {}) => {
       );
     },
   };
+};
+const CustomHeader = () => {
+  const { setOpen, labels } = useChatContext();
+  return (
+    <div className="flex items-center justify-between p-2 border-b">
+      <div className="flex items-center gap-2">
+        <img
+          src={useBaseUrl("/img/rocky.svg")}
+          alt="Rocky the happy otter"
+          style={{ height: "60px", width: "auto" }}
+        />
+        <span className="font-medium">{labels.title}</span>
+      </div>
+      <button
+        onClick={() => setOpen(false)}
+        className="text-xl leading-none"
+        aria-label="Close chat"
+      >
+        ×
+      </button>
+    </div>
+  );
 };
 
 function MyRenderActionExecutionMessage(props) {
@@ -107,14 +134,11 @@ export default function Layout(props) {
             initial:
               "AI generated answers are based on docs and other sources. Please test answers in non-production environments.",
           }}
+          Header={CustomHeader}
           defaultOpen={false}
           markdownTagRenderers={createMarkdownTagRenderers()}
           RenderActionExecutionMessage={MyRenderActionExecutionMessage}
-          Input={(props) => (
-            <CopilotCustomInput
-              {...props}
-            />
-          )}
+          Input={(props) => <CopilotCustomInput {...props} />}
         />
       </LayoutProvider>
     </CopilotKit>
