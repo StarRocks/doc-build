@@ -55,7 +55,7 @@ const CustomHeader = () => {
     <div className="flex items-center justify-between p-2 border-b">
       <div className="flex items-center gap-2">
         <img
-          src={useBaseUrl("/img/Rocky.svg")}
+          src={useBaseUrl("/img/rocky.svg")}
           alt="Rocky the happy otter"
           style={{ height: "60px", width: "auto" }}
         />
