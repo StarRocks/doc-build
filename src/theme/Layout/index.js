@@ -49,8 +49,6 @@ const createMarkdownTagRenderers = (originalRenderers = {}) => {
     },
   };
 };
-import Image from "@theme/IdealImage";
-import Rocky from "/img/rocky.svg";
 const CustomHeader = () => {
   const { setOpen, labels } = useChatContext();
   return (
