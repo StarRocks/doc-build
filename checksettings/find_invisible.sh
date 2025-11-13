@@ -7,14 +7,12 @@ mysql -P9030 -h 127.0.0.1 -u root < ./helpers/all-script > ./temp/all-variables.
 /opt/homebrew/opt/grep/libexec/gnubin/grep -vf ./temp/visible-variables.txt ./temp/all-variables.txt > ./temp/invisible
 echo "Checking the docs for invisible parameters..."
 {
-    read
     while IFS=$'\t' read -r first_field rest_of_line; do
+        echo "---------- $first_field"
         if grep -q "\#\#\# $first_field" /Users/droscign/GitHub/starrocks/docs/en/sql-reference/System_variable.md; then
             : # do nothing
-            echo $first_field is decloaked
-        else
-            echo "Setting: $first_field"
-            echo "NOT in System_variable.md, checking Algolia"
+            echo $first_field is in System_variable.md
+            echo "Checking Algolia"
             ./helpers/algoliacheck.sh $first_field
             echo "-----------------------------------------"
         fi
