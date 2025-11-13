@@ -9,11 +9,18 @@ echo "Checking the docs for invisible parameters..."
 {
     echo "-----------------------------------------"
     while IFS=$'\t' read -r first_field rest_of_line; do
+        grep_found=1
+        algolia_found=1
         if grep -q "\#\#\# $first_field" /Users/droscign/GitHub/starrocks/docs/en/sql-reference/System_variable.md; then
             echo $first_field is in System_variable.md
+            grep_found=0
         fi
         ./helpers/algoliacheck.sh $first_field
-        echo "-----------------------------------------"
+        algolia_found=$?
+        if [ $algolia_found -eq 0 ] || [ $grep_found -eq 0 ]
+        then
+          echo "-----------------------------------------"
+        fi
     done
 } < ./temp/invisible > ./results
 

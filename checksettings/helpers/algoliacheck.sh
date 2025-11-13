@@ -19,9 +19,10 @@ RESPONSE=$(curl -s -X POST \
 URLS=$(echo "$RESPONSE" | jq -r '.hits[].url')
 
 if [ -z "$URLS" ]; then
-  echo "No results found in Algolia '$SEARCH_STRING'"
+  exit 1
+  #echo "No results found in Algolia '$SEARCH_STRING'"
 else
-  echo "Found results in Algolia '$SEARCH_STRING' at:"
+  echo "Found results in Algolia for '$SEARCH_STRING' at:"
   echo "$URLS"
 fi
 
