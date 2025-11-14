@@ -8,7 +8,7 @@ INDEX_NAME="starrocks"
 function highlight_if_not_setting_page {
     local page=$1
 
-    if ! echo "$page" | egrep -q '(System_variable|BE_configuration|FE_configuration)' ; then
+    if ! echo "$page" | ggrep -E -q '(System_variable|BE_configuration|FE_configuration)' ; then
         # Change text color to red if the word is NOT found
         echo -e "\033[31m$page\033[0m"  # Red color
     else

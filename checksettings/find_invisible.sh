@@ -12,14 +12,14 @@ mkdir -p temp
 mysql -P9030 -h 127.0.0.1 -u root < ./helpers/visible-script > ./temp/visible-variables.txt
 echo "Getting invisible parameters from StarRocks DB..."
 mysql -P9030 -h 127.0.0.1 -u root < ./helpers/all-script > ./temp/all-variables.txt
-egrep -vf ./temp/visible-variables.txt ./temp/all-variables.txt > ./temp/invisible
+ggrep -Evf ./temp/visible-variables.txt ./temp/all-variables.txt > ./temp/invisible
 echo "Checking the docs for invisible parameters..."
 {
     echo "-----------------------------------------"
     while IFS=$'\t' read -r first_field rest_of_line; do
         grep_found=1
         algolia_found=1
-        if grep -q "$first_field" $1; then
+        if ggrep -q "$first_field" $1; then
             echo $first_field is in System_variable.md
             grep_found=0
         fi
