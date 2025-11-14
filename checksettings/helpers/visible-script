@@ -1,0 +1,3 @@
+SET enable_show_all_variables = false;
+show variables;
+
