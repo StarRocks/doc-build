@@ -4,6 +4,8 @@
 
 > Note: You need a running StarRocks instance on localhost:9030
 
+> Note: You need GNU grep, on a mac `brew install grep`. The `grep` commands in the scripts are written as `ggrep -E...` which uses GNU `grep`.
+
 Usage: `./find_invisible.sh <path to System_variable.md> <language>`
 
 Example: `./find_invisible.sh ~/GitHub/starrocks/docs/en/sql-reference/System_variable.md en`
