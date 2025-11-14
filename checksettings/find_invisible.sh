@@ -19,7 +19,7 @@ echo "Checking the docs for invisible parameters..."
     while IFS=$'\t' read -r first_field rest_of_line; do
         grep_found=1
         algolia_found=1
-        if grep -q "\#\#\# $first_field" $1; then
+        if grep -q "$first_field" $1; then
             echo $first_field is in System_variable.md
             grep_found=0
         fi
