@@ -12,7 +12,7 @@ mkdir -p temp
 mysql -P9030 -h 127.0.0.1 -u root < ./helpers/visible-script > ./temp/visible-variables.txt
 echo "Getting invisible parameters from StarRocks DB..."
 mysql -P9030 -h 127.0.0.1 -u root < ./helpers/all-script > ./temp/all-variables.txt
-/opt/homebrew/opt/grep/libexec/gnubin/grep -vf ./temp/visible-variables.txt ./temp/all-variables.txt > ./temp/invisible
+egrep -vf ./temp/visible-variables.txt ./temp/all-variables.txt > ./temp/invisible
 echo "Checking the docs for invisible parameters..."
 {
     echo "-----------------------------------------"
