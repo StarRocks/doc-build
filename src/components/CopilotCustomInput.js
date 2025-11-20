@@ -57,7 +57,7 @@ export function CopilotCustomInput({inProgress, onSend, isVisible, costInfo, onR
                   <textarea
                       ref={textareaRef}
                       disabled={inProgress}
-                      placeholder="Ask here ... (Press Ctrl+Enter to send) ... Sponsored by CelerData ... Powered by CopilotKit"
+                      placeholder="Ask here... Cmd/Ctrl + Enter to send. Sponsored by CelerData & Powered by CopilotKit"
                       style={{
                           flex: 1,
                           padding: "8px",
@@ -74,7 +74,13 @@ export function CopilotCustomInput({inProgress, onSend, isVisible, costInfo, onR
                       }}
                       onInput={autoResizeTextarea}
                       onKeyDown={(e) => {
-                          if (e.key === "Enter" && e.ctrlKey) {
+                            /** detect:
+                             * Enter + Ctrl on Linux
+                             * Enter + ⌘ on mac
+                             * Enter + Win on Microsoft Windows
+                             * (mac and Windows special key is `metaKey`)
+                             */
+                          if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
                               e.preventDefault();
                               const value = e.currentTarget.value.trim();
                               if (value) {
