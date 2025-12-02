@@ -40,10 +40,11 @@ const config = {
 
   onBrokenAnchors: 'ignore',
   onBrokenLinks: 'throw',
-  onBrokenMarkdownLinks: 'throw',
+  markdown: { hooks: { onBrokenMarkdownLinks: 'throw' } },
+
 
   future: {
-    experimental_faster: true,
+    v4: true,
   },
 
   i18n: {
@@ -292,6 +293,7 @@ const config = {
       announcementBar: {
         // content: `⭐️ If you like Docusaurus, give it a star on <a target="_blank" rel="noopener noreferrer" href="https://github.com/facebook/docusaurus">GitHub</a> and follow us on <a target="_blank" rel="noopener noreferrer" href="https://x.com/docusaurus">X ${TwitterSvg}</a>`,
 	    content: `🎉️ <b><a target="_blank" href="https://www.youtube.com/playlist?list=PL0eWwaesODdjjEvyaupqunQjE5Ndy7-Ku">Watch on demand: StarRocks Summit 2025</a></b> 🎉️`,
+        id: 'summit',
         backgroundColor: '#111F64',
         textColor: '#ffffff',
         isCloseable: true,
