@@ -109,9 +109,9 @@ const config = {
             } else {
               return {
                 '4.0': { label: 'Latest-4.0', banner: 'none' },
-                '3.5': { label: '3.5', banner: 'none' },
+                '3.5': { label: 'Stable-3.5', banner: 'none' },
                 '3.4': { label: '3.4', banner: 'none' },
-                '3.3': { label: 'Stable-3.3', banner: 'none' },
+                '3.3': { label: '3.3', banner: 'none' },
                 '3.2': { label: '3.2', banner: 'none' },
                 '3.1': { label: '3.1', banner: 'none' },
               };
