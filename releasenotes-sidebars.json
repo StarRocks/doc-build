@@ -10,6 +10,7 @@
           "collapsible": "false",
           "label": "StarRocks version 4.x",
           "items": [
+            "release-4.1",
             "release-4.0"
           ]
         },

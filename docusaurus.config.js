@@ -88,18 +88,18 @@ const config = {
             if (isVersioningDisabled) {
               return 'current';
             } else {
-              return '4.0';
+              return '4.1';
             }
           })(),
 
-          //onlyIncludeVersions: ['4.0', '3.5', '3.4', '3.3', 3.2', '3.1'],
+          //onlyIncludeVersions: ['4.1', '4.0', '3.5', '3.4', '3.3', 3.2', '3.1'],
           onlyIncludeVersions: (() => {
             if (isVersioningDisabled) {
               return ['current'];
             } else if (isBuildFast){
               return [...versions.slice(0, 2)];
             } else {
-              return ['4.0', '3.5', '3.4', '3.3', '3.2', '3.1'];
+              return ['4.1', '4.0', '3.5', '3.4', '3.3', '3.2', '3.1'];
             }
           })(),
 
@@ -108,7 +108,8 @@ const config = {
               return { current: { label: 'current' } };
             } else {
               return {
-                '4.0': { label: 'Latest-4.0', banner: 'none' },
+                '4.1': { label: 'Candidate-4.1', banner: 'none' },
+				'4.0': { label: 'Latest-4.0', banner: 'none' },
                 '3.5': { label: 'Stable-3.5', banner: 'none' },
                 '3.4': { label: '3.4', banner: 'none' },
                 '3.3': { label: '3.3', banner: 'none' },
