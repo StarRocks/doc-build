@@ -5,7 +5,7 @@ on:
       docBuildBranch:
         description: 'doc-build branch to build with'     
         required: true
-        default: 'main'
+        default: 'docusaurus310'
         type: string
       docVersionsToBuild:
         description: 'Build two recent doc versions, or all?'
