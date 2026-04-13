@@ -109,8 +109,8 @@ const config = {
               return { current: { label: 'current' } };
             } else {
               return {
-                '4.1': { label: 'Candidate-4.1', banner: 'none' },
-				'4.0': { label: 'Latest-4.0', banner: 'none' },
+                '4.1': { label: 'Latest-4.1', banner: 'none' },
+				'4.0': { label: '4.0', banner: 'none' },
                 '3.5': { label: 'Stable-3.5', banner: 'none' },
                 '3.4': { label: '3.4', banner: 'none' },
                 '3.3': { label: '3.3', banner: 'none' },
