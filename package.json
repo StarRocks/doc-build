@@ -19,7 +19,7 @@
     "@algolia/client-search": "^5.45.0",
     "@copilotkit/react-core": "1.9.3",
     "@copilotkit/react-ui": "1.9.3",
-    "@docsearch/react": "3",
+    "@docsearch/react": "4",
     "@docusaurus/core": "^3.10.0",
     "@docusaurus/faster": "^3.10.0",
     "@docusaurus/plugin-client-redirects": "^3.10.0",
