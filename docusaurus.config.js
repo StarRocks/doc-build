@@ -53,7 +53,7 @@ const config = {
     localeConfigs: {
       en: {
         htmlLang: 'en-US',
-	label: 'English',
+        label: 'English',
       },
       zh: {
         htmlLang: 'zh-CN',
