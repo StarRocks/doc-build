@@ -27,17 +27,17 @@ jobs:
       INPUTS_VERSIONS: "${{ inputs.docVersionsToBuild || 'All' }}"
     runs-on: ubuntu-24.04-arm
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
         with:
           ref: ${{ env.INPUTS_BRANCH }}
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
           cache: 'yarn'
           cache-dependency-path: 'yarn.lock'
       
-      - uses: actions/cache@v3
+      - uses: actions/cache@v5
         id: cache
         with:
           path: ./node_modules
@@ -52,7 +52,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET }}
           aws-region: us-west-2
       
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
         with:
           repository: starrocks/starrocks
           fetch-depth: 0
