@@ -49,7 +49,7 @@ jobs:
       - run: npm run copy
       - name: Build website
         run:  |
-          export NODE_OPTIONS="--max_old_space_size=15360"
+          export NODE_OPTIONS="--max_old_space_size=16384"
           export DOCUSAURUS_IGNORE_SSG_WARNINGS=true
           yarn build
 
