@@ -35,7 +35,7 @@ You may want to refer to the PRs that make these changes for the Candidate versi
 
 ### Edit `docs-site/versions.json`
 
-This is a Docusaurus `versions.json`, this one is used by Docusaurus to configure which versions should be included in nav. Add the new version to the top, and remove any versions that we will no longer publish (negotiate with CTO and PM)
+This file is used by both Docusaurus (for nav) and the build script (`cli.js`) to determine which versions to build. Add the new version to the top, and remove any versions that we will no longer publish (negotiate with CTO and PM)
 
 ```bash
 [
@@ -44,33 +44,6 @@ This is a Docusaurus `versions.json`, this one is used by Docusaurus to configur
   "3.2",
   "3.1",
   "2.5"
-]
-```
-
-### Edit `docs-site/src/versions.json`
-
-There is a second `versions.json`, this one is used by the StarRocks build process to configure which branches get built. Add the new version to the list below `main`, and remove any versions that we will no longer publish (negotiate with CTO and PM)
-
-```bash
-[
-  {
-    "branch": "main"
-  },
-  {
-    "branch": "3.4"
-  },
-  {
-    "branch": "3.3"
-  },
-  {
-    "branch": "3.2"
-  },
-  {
-    "branch": "3.1"
-  },
-  {
-    "branch": "2.5"
-  }
 ]
 ```
 
@@ -140,10 +113,6 @@ Edit the `versions()` function to return the labels used in the nav. This is als
             }
           })(),
 ```
-
-### Edit the script that copies the Release Notes and Developer docs into place
-
-Edit `_IGNORE/cp_common_docs.sh` and add lines for the new version. The easiest thing to do is to find all of the lines related to the current version, make a copy, and set the new version.
 
 ### Add the new version to the Release Notes nav
 

@@ -10,7 +10,10 @@ const {
   locales,
   commonSiderBars,
 } = config;
-const versions = config.versions.filter((i) => i.branch !== "latest");
+const versions = [
+  { branch: "main" },
+  ...require("./versions.json").map((v) => ({ branch: v })),
+];
 const exec = require("child_process").exec;
 const execSync = require("child_process").execSync;
 
@@ -22,7 +25,7 @@ const deleteDirIfExist = (path) => {
   }
 };
 const cleanup = () => {
-  const versionedBranches = config.versions
+  const versionedBranches = versions
     .filter(v => v.branch !== 'main')
     .map(v => v.branch);
   const latestVersion = versionedBranches[0];
