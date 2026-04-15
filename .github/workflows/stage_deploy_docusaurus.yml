@@ -61,6 +61,7 @@ jobs:
       - name: Install Dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
+          sudo lshw -c memory
           yarn install --frozen-lockfile
       
       - run: npm run copy
