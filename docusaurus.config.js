@@ -45,16 +45,7 @@ const config = {
 
   future: {
     v4: true,
-    faster: {
-      rspackBundler: true,          // Rust-based bundler, much lower memory than webpack
-      rspackPersistentCache: true,  // Persistent cache speeds up re-builds
-      swcJsLoader: true,            // SWC replaces Babel for JS transforms
-      swcJsMinimizer: true,         // SWC for JS minification
-      swcHtmlMinimizer: true,       // SWC for HTML minification
-      lightningCssMinimizer: true,  // Rust-based CSS minifier
-      mdxCrossCompilerCache: true,  // Avoids re-compiling MDX across locales/versions
-      ssgWorkerThreads: true,       // Distribute SSG across worker threads
-    },
+    faster: true,
   },
 
   i18n: {
