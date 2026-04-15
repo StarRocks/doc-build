@@ -66,6 +66,7 @@ jobs:
       - run: npm run copy
       - name: Build website
         run:  |
+          sudo lshw -c memory
           export NODE_OPTIONS="--max_old_space_size=15360"
           export DOCUSAURUS_IGNORE_SSG_WARNINGS=true
           if [[ $INPUTS_VERSIONS == 'TopTwo' ]]; then

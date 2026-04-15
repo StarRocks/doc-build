@@ -45,6 +45,15 @@ const config = {
 
   future: {
     v4: true,
+    experimental_faster: {
+      rspackBundler: true, // Enables Rspack as the bundler
+      rspackPersistentCache: true, // Speeds up subsequent builds
+      swcJsLoader: true, // Uses SWC for faster JS transpilation
+      swcJsMinimizer: true, // Uses SWC for faster JS minification
+      swcHtmlMinimizer: true, // Uses SWC for faster HTML minification
+      lightningCssMinimizer: true, // Uses Lightning CSS for faster CSS minification
+      mdxCrossCompilerCache: true, // Speeds up MDX compilation
+    },
   },
 
   i18n: {
