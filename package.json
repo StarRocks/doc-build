@@ -10,6 +10,8 @@
     "deploy": "docusaurus deploy",
     "clear": "docusaurus clear",
     "serve": "docusaurus serve",
+    "clone": "node cli.js clone",
+    "copy": "node cli.js copy",
     "write-translations": "docusaurus write-translations",
     "write-heading-ids": "docusaurus write-heading-ids"
   },

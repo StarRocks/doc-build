@@ -45,7 +45,7 @@ const config = {
 
   future: {
     v4: true,
-    experimental_faster: {
+    faster: {
       rspackBundler: true,          // Rust-based bundler, much lower memory than webpack
       rspackPersistentCache: true,  // Persistent cache speeds up re-builds
       swcJsLoader: true,            // SWC replaces Babel for JS transforms
