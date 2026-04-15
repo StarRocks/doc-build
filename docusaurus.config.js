@@ -45,7 +45,19 @@ const config = {
 
   future: {
     v4: true,
-    faster: true,
+    faster: {
+      rspackBundler: true,
+      // Persistent cache is only useful for local iterative builds.
+      // On CI the .docusaurus dir is not cached between runs, so writing
+      // the cache on every run adds large disk I/O with no benefit.
+      rspackPersistentCache: !process.env.CI,
+      swcJsLoader: true,
+      swcJsMinimizer: true,
+      swcHtmlMinimizer: true,
+      lightningCssMinimizer: true,
+      mdxCrossCompilerCache: true,
+      ssgWorkerThreads: true,
+    },
   },
 
   i18n: {
