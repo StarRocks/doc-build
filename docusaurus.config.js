@@ -45,6 +45,16 @@ const config = {
 
   future: {
     v4: true,
+    experimental_faster: {
+      rspackBundler: true,          // Rust-based bundler, much lower memory than webpack
+      rspackPersistentCache: true,  // Persistent cache speeds up re-builds
+      swcJsLoader: true,            // SWC replaces Babel for JS transforms
+      swcJsMinimizer: true,         // SWC for JS minification
+      swcHtmlMinimizer: true,       // SWC for HTML minification
+      lightningCssMinimizer: true,  // Rust-based CSS minifier
+      mdxCrossCompilerCache: true,  // Avoids re-compiling MDX across locales/versions
+      ssgWorkerThreads: true,       // Distribute SSG across worker threads
+    },
   },
 
   i18n: {
@@ -93,14 +103,14 @@ const config = {
             }
           })(),
 
-          //onlyIncludeVersions: ['4.1', '4.0', '3.5', '3.4', '3.3'],
+          //onlyIncludeVersions: ['4.1', '4.0', '3.5', '3.4', '3.3', '3.2', '3.1'],
           onlyIncludeVersions: (() => {
             if (isVersioningDisabled) {
               return ['current'];
             } else if (isBuildFast){
               return [...versions.slice(0, 2)];
             } else {
-              return ['4.1', '4.0', '3.5', '3.4', '3.3'];
+              return ['4.1', '4.0', '3.5', '3.4', '3.3', '3.2', '3.1'];
             }
           })(),
 
@@ -114,6 +124,8 @@ const config = {
                 '3.5': { label: 'Stable-3.5', banner: 'none' },
                 '3.4': { label: '3.4', banner: 'none' },
                 '3.3': { label: '3.3', banner: 'none' },
+                '3.2': { label: '3.2', banner: 'none' },
+                '3.1': { label: '3.1', banner: 'none' },
               };
             }
           })(),
