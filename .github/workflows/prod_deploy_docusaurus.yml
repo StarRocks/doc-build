@@ -49,7 +49,7 @@ jobs:
       - run: npm run copy
       - name: Build website
         run:  |
-          export NODE_OPTIONS="--max-old-space-size=8192"
+          export NODE_OPTIONS="--max-old-space-size=15360"
           export DOCUSAURUS_IGNORE_SSG_WARNINGS=true
           export DOCUSAURUS_PERF_LOGGER=true
           export DOCUSAURUS_SSR_CONCURRENCY=8
