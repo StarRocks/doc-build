@@ -10,6 +10,7 @@ import {
   SkipToContentFallbackId,
   ThemeClassNames,
 } from "@docusaurus/theme-common";
+import { useKeyboardNavigation } from "@docusaurus/theme-common/internal";
 import SkipToContent from "@theme/SkipToContent";
 import AnnouncementBar from "@theme/AnnouncementBar";
 import Navbar from "@theme/Navbar";
@@ -95,6 +96,7 @@ export default function Layout(props) {
     title,
     description,
   } = props;
+  useKeyboardNavigation();
   return (
     <CopilotKit
       agent="sr_agent"
