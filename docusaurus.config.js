@@ -54,8 +54,8 @@ const config = {
             lightningCssMinimizer: true,
             mdxCrossCompilerCache: true,
             rspackBundler: true,
-            rspackPersistentCache: false,
             ssgWorkerThreads: true,
+            rspackPersistentCache: false,
           },
   },
 
