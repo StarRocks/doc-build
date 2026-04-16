@@ -46,17 +46,17 @@ const config = {
   future: {
     v4: true,
     experimental_faster:
-            {
-            // Verbose object: easier to independently test single attributes
-            swcJsLoader: true,
-            swcJsMinimizer: true,
-            swcHtmlMinimizer: true,
-            lightningCssMinimizer: true,
-            mdxCrossCompilerCache: true,
-            rspackBundler: true,
-            ssgWorkerThreads: true,
-            rspackPersistentCache: false,
-          },
+      {
+        // Verbose object: easier to independently test single attributes
+        swcJsLoader: true,
+        swcJsMinimizer: true,
+        swcHtmlMinimizer: true,
+        lightningCssMinimizer: true,
+        mdxCrossCompilerCache: true,
+        ssgWorkerThreads: true,
+        rspackBundler: false,
+        rspackPersistentCache: false,
+      },
   },
 
   i18n: {
