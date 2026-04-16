@@ -56,7 +56,6 @@ const config = {
             rspackBundler: true,
             rspackPersistentCache: false,
             ssgWorkerThreads: true,
-            gitEagerVcs: true,
           },
   },
 
