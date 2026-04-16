@@ -50,7 +50,8 @@ jobs:
       - name: Build website
         run:  |
           sudo lshw -c memory
-          export NODE_OPTIONS="--max_old_space_size=15360"
+          export NODE_OPTIONS="--max_old_space_size=12288"
+          export DOCUSAURUS_PERF_LOGGER=true
           export DOCUSAURUS_IGNORE_SSG_WARNINGS=true
           yarn build
 
