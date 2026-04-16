@@ -46,8 +46,8 @@ const config = {
   future: {
     v4: true,
     experimental_faster: {
-      rspackBundler: true, // Enables Rspack as the bundler
-      rspackPersistentCache: true, // Speeds up subsequent builds
+      rspackBundler: false, // Enables Rspack as the bundler
+      rspackPersistentCache: false, // Speeds up subsequent builds
       swcJsLoader: true, // Uses SWC for faster JS transpilation
       swcJsMinimizer: true, // Uses SWC for faster JS minification
       swcHtmlMinimizer: true, // Uses SWC for faster HTML minification
