@@ -25,7 +25,7 @@ jobs:
     env:
       INPUTS_BRANCH: "${{ inputs.docBuildBranch || 'main' }}"
       INPUTS_VERSIONS: "${{ inputs.docVersionsToBuild || 'All' }}"
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
