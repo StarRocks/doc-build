@@ -1,5 +1,5 @@
 let locales = require("./locales.json");
-let versions = require("./versions.json");
+let versions = require("../versions.json").map((v) => ({ branch: v }));
 
 if (process.env.DOC_LOCALE && process.env.DOC_LOCALE !== "all") {
   locales = locales.filter((l) => l.id === process.env.DOC_LOCALE);
