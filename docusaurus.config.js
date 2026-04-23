@@ -246,12 +246,6 @@ const config = {
                 className: 'header-slack-link',
                 'aria-label': 'Slack workspace',
               },
-              {
-                label: 'Forum',
-                to: 'https://forum.starrocks.io/',
-                className: 'header-discourse-link',
-                'aria-label': 'Forum',
-              },
             ],
           },
           {
