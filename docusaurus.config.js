@@ -168,6 +168,10 @@ const config = {
       redirects: [
         // /docs/oldDoc -> /docs/newDoc
         {
+          from: '/docs/using_starrocks/data_lake_query_acceleration_with_materialized_views/',
+          to: '/docs/using_starrocks/async_mv/use_cases/data_lake_query_acceleration_with_materialized_views/'
+        },
+        {
           from: '/docs/loading/cloud_storage_load/',
           to: '/docs/loading/objectstorage/'
         },
