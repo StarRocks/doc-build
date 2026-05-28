@@ -69,6 +69,7 @@ jobs:
           export NODE_OPTIONS="--max_old_space_size=12288"
           export DOCUSAURUS_PERF_LOGGER=false
           export DOCUSAURUS_IGNORE_SSG_WARNINGS=true
+          export BROWSERSLIST_IGNORE_OLD_DATA=true
           export SITE_URL=https://docs-stage.starrocks.io
           if [[ $INPUTS_VERSIONS == 'TopTwo' ]]; then
             export BUILD_FAST=true
