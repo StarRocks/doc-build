@@ -20,6 +20,7 @@ const isBuildFast = !!process.env.BUILD_FAST;
 //NOTE: This is only for use when building locally in Docker
 // 
 const isVersioningDisabled = !!process.env.DISABLE_VERSIONING || false;
+const isDefaultLocale = (process.env.DOCUSAURUS_CURRENT_LOCALE ?? 'en') === 'en';
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -177,20 +178,18 @@ const config = {
       ],
     },
     ],
-    [
+    ...(isDefaultLocale ? [[
       '@signalwire/docusaurus-plugin-llms-txt',
       {
                 // Markdown file generation options
         markdown: {
           enableFiles: true,
-          relativePaths: true,
+          relativePaths: false,
           includeBlog: false,
           includePages: false,
           includeDocs: true,
           includeVersionedDocs: false,
           excludeRoutes: [
-            '/zh/**',
-            '/ja/**',
             // Pure navigation pages — no content for LLMs
             '/docs/cover_pages/**',
             '/docs/category/**',
@@ -224,8 +223,6 @@ const config = {
           includeDocs: true,
           includeVersionedDocs: false,
           excludeRoutes: [
-            '/zh/**',
-            '/ja/**',
             // Pure navigation pages — no content for LLMs
             '/docs/cover_pages/**',
             '/docs/category/**',
@@ -258,7 +255,7 @@ const config = {
           siteDescription: 'StarRocks is an open-source, high-performance OLAP database for real-time analytics at scale. It supports Standard SQL, materialized views, data lakes (Iceberg, Delta Lake, Hudi), stream ingestion (Kafka, Flink), and cloud-native deployment. This documentation covers SQL reference, table design, data loading, query acceleration, administration, and release notes.',
         },
       },
-    ],
+    ]] : []),
   ],
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
