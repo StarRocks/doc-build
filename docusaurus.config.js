@@ -28,7 +28,7 @@ const config = {
   tagline: 'StarRocks documentation',
   favicon: 'img/favicon.ico',
 
-  url: 'https://docs.starrocks.io/',
+  url: process.env.SITE_URL || 'https://docs.starrocks.io',
   // Set the /<baseUrl>/ pathname under which your site is served
   baseUrl: '/',
 
