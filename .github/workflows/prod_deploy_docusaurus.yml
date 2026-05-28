@@ -58,7 +58,7 @@ jobs:
         env:
           BUCKET_SECRET: ${{ secrets.AWS_OSS_DOCS_PROD_BUCKET }}
         run: |
-          aws s3 sync build/ s3://$BUCKET_SECRET/ --delete $*
+          aws s3 sync build/ s3://$BUCKET_SECRET/ --quiet --delete $*
 
       - name: clean cdn cache
         env:
