@@ -20,6 +20,7 @@ const isBuildFast = !!process.env.BUILD_FAST;
 //NOTE: This is only for use when building locally in Docker
 // 
 const isVersioningDisabled = !!process.env.DISABLE_VERSIONING || false;
+const isDefaultLocale = (process.env.DOCUSAURUS_CURRENT_LOCALE ?? 'en') === 'en';
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -27,7 +28,7 @@ const config = {
   tagline: 'StarRocks documentation',
   favicon: 'img/favicon.ico',
 
-  url: 'https://docs.starrocks.io/',
+  url: process.env.SITE_URL || 'https://docs.starrocks.io',
   // Set the /<baseUrl>/ pathname under which your site is served
   baseUrl: '/',
 
@@ -147,7 +148,6 @@ const config = {
     },
   ],
   plugins: [
-    'docusaurus-plugin-hubspot',
     './src/plugins/tailwind-config.js',
     [
       "@docusaurus/plugin-content-docs",
@@ -178,8 +178,85 @@ const config = {
       ],
     },
     ],
-  ],
+    ...(isDefaultLocale ? [[
+      '@signalwire/docusaurus-plugin-llms-txt',
+      {
+                // Markdown file generation options
+        markdown: {
+          enableFiles: true,
+          relativePaths: false,
+          includeBlog: false,
+          includePages: false,
+          includeDocs: true,
+          includeVersionedDocs: false,
+          excludeRoutes: [
+            // Pure navigation pages — no content for LLMs
+            '/docs/cover_pages/**',
+            '/docs/category/**',
+            // DocCardList-only section index pages (navigation, no content)
+            // Add new ones here as the nav structure evolves
+            '/docs/administration/',
+            '/docs/administration/management/',
+            '/docs/administration/management/configuration/',
+            '/docs/benchmarking/',
+            '/docs/data_source/catalog/catalog_intro/',
+            '/docs/faq/',
+            '/docs/integrations/',
+            '/docs/integrations/streaming/',
+            '/docs/integrations/streaming/apache_kafka/',
+            '/docs/introduction/',
+            '/docs/loading/',
+            '/docs/loading/loading_introduction/loading_overview/',
+            '/docs/loading/objectstorage/',
+            '/docs/project_help/',
+            '/docs/sql-reference/data-types/',
+            '/docs/sql-reference/data-types/date-types/',
+            '/docs/sql-reference/sql-functions/',
+            '/docs/sql-reference/sql-functions/date-time-functions/',
+            '/docs/unloading/',
+          ],
+        },
+        llmsTxt: {
+          enableLlmsFullTxt: true,
+          includeBlog: false,
+          includePages: false,
+          includeDocs: true,
+          includeVersionedDocs: false,
+          excludeRoutes: [
+            // Pure navigation pages — no content for LLMs
+            '/docs/cover_pages/**',
+            '/docs/category/**',
+            // DocCardList-only section index pages (navigation, no content)
+            // Add new ones here as the nav structure evolves
+            '/docs/administration/',
+            '/docs/administration/management/',
+            '/docs/administration/management/configuration/',
+            '/docs/benchmarking/',
+            '/docs/data_source/catalog/catalog_intro/',
+            '/docs/faq/',
+            '/docs/integrations/',
+            '/docs/integrations/streaming/',
+            '/docs/integrations/streaming/apache_kafka/',
+            '/docs/introduction/',
+            '/docs/loading/',
+            '/docs/loading/loading_introduction/loading_overview/',
+            '/docs/loading/objectstorage/',
+            '/docs/project_help/',
+            '/docs/sql-reference/data-types/',
+            '/docs/sql-reference/data-types/date-types/',
+            '/docs/sql-reference/sql-functions/',
+            '/docs/sql-reference/sql-functions/date-time-functions/',
+            '/docs/unloading/',
+          ],
+          autoSectionDepth: 2,
 
+          // Site metadata
+          siteTitle: 'StarRocks Documentation',
+          siteDescription: 'StarRocks is an open-source, high-performance OLAP database for real-time analytics at scale. It supports Standard SQL, materialized views, data lakes (Iceberg, Delta Lake, Hudi), stream ingestion (Kafka, Flink), and cloud-native deployment. This documentation covers SQL reference, table design, data loading, query acceleration, administration, and release notes.',
+        },
+      },
+    ]] : []),
+  ],
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
@@ -339,11 +416,6 @@ const config = {
         // Optional: path for search page that enabled by default (`false` to disable it)
         searchPagePath: 'search',
 
-      },
-      hubspot: {
-        accountId: '21782839',
-        async: false,
-        defer: false,
       },
     }),
 };

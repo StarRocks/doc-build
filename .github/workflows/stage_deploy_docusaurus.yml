@@ -66,10 +66,11 @@ jobs:
       - run: npm run copy
       - name: Build website
         run:  |
-          sudo lshw -c memory
           export NODE_OPTIONS="--max_old_space_size=12288"
-          export DOCUSAURUS_PERF_LOGGER=true
+          export DOCUSAURUS_PERF_LOGGER=false
           export DOCUSAURUS_IGNORE_SSG_WARNINGS=true
+          export BROWSERSLIST_IGNORE_OLD_DATA=true
+          export SITE_URL=https://docs-stage.starrocks.io
           if [[ $INPUTS_VERSIONS == 'TopTwo' ]]; then
             export BUILD_FAST=true
           fi
@@ -79,7 +80,7 @@ jobs:
         env:
           BUCKET_SECRET: ${{ secrets.AWS_OSS_DOCS_STAGE_BUCKET }}
         run: |
-          aws s3 sync build/ s3://$BUCKET_SECRET/ --delete $*
+          aws s3 sync build/ s3://$BUCKET_SECRET/ --quiet --delete $*
 
       - name: clean cdn cache
         env:
