@@ -15,15 +15,13 @@ records each use in Google Analytics so we know when to rotate.
 ## Rotating the invite link (the routine task)
 
 1. In Slack, generate a fresh invite link.
-2. Edit **`static/join/index.html`** and replace the URL in the one tag:
+2. Edit the file [**`static/join/index.html`**](https://github.com/StarRocks/doc-build/edit/main/static/join/index.html) and replace the URL in the one tag:
    ```html
-   <a id="invite" href="https://join.slack.com/t/REPLACE-WITH-CURRENT-INVITE">click here to join</a>
+   <a id="invite" href="https://join.slack.com/t/starrocks/shared_invite/REPLACE--WITH-CURRENT-INVITE">click here to join</a>
    ```
    That `href` is the **single source of truth** — the redirect script reads it.
    There is nothing else to change.
-3. Commit on a branch and run the normal **prod deploy** workflow
-   (`build → aws s3 sync → CloudFront invalidation`). The new link is live once
-   the invalidation completes.
+3. Commit on a branch and post in the `phx-docs` channel to have the PR merged and the **prod deploy** workflow run
 
 That's the whole "management" story: one line, then your existing publish.
 
