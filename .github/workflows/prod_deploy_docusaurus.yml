@@ -75,4 +75,4 @@ jobs:
           CLOUFRONT_DIST_ID: ${{ secrets.AWS_OSS_DOCS_PROD_CLOUDFRONT_DIST_ID }}
         run: |
           aws cloudfront create-invalidation --distribution-id $CLOUFRONT_DIST_ID --paths "/*"
-
+          aws cloudfront get-distribution-config --id $CLOUFRONT_DIST_ID --query 'DistributionConfig.Logging' --output json
