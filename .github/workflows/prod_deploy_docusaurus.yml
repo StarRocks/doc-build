@@ -23,6 +23,13 @@ jobs:
         with:
           ref: ${{ env.INPUTS_BRANCH }}
 
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET }}
+          aws-region: us-west-2
+
       - name: check log access
         env:
           CLOUFRONT_DIST_ID: ${{ secrets.AWS_OSS_DOCS_PROD_CLOUDFRONT_DIST_ID }}
@@ -43,12 +50,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-yarn-
           
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_KEY }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET }}
-          aws-region: us-west-2
       
       - uses: actions/checkout@v3
         with:
