@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  StarRocks Slack invite redirect  —  served at  https://docs.starrocks.io/join
+  ============================================================================
+
+  WHY THIS EXISTS
+    Slack invite links on the Pro plan expire every ~400 uses or 30 days.
+    Everything that links to the StarRocks Slack should point at /join instead
+    of a raw Slack URL, so that rotating the link is a one-line change here
+    rather than hunting down links across the docs, site, and READMEs.
+
+  ---------------------------------------------------------------------------
+  TO ROTATE THE INVITE (the ONLY thing you normally edit):
+    1. Generate a fresh invite link in Slack.
+    2. Replace the URL in the <a id="invite" href="..."> tag below.
+       That single href is the source of truth — JS reads it for the redirect.
+    3. Commit on a branch and run the normal prod deploy
+       (build -> s3 sync -> CloudFront invalidation). Done.
+  ---------------------------------------------------------------------------
+  HOW USAGE IS COUNTED (to know when you're near the 400 limit):
+    This page fires a GA4 event named  slack_invite_redirect  on the docs
+    site's existing property (G-VTBXVPZLHB) just before redirecting.
+    In GA4: Reports -> Engagement -> Events -> slack_invite_redirect, or
+    Explore a custom report. Rotate at ~350 counted events to stay safely
+    under Slack's real 400 limit, since ad/privacy blockers make GA a
+    slight UNDERcount. The 30-day rule is just a calendar reminder.
+    See SLACK_INVITE.md at the repo root for the full runbook.
+  ---------------------------------------------------------------------------
+  FUTURE (not built): to collect signup info ("where do you work?"), this
+    page can grow a form that POSTs to a backend BEFORE redirecting — no
+    change to the /join URL or to anything that links here.
+  ============================================================================
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Join the StarRocks Slack</title>
+    <link rel="icon" href="/img/favicon.ico" />
+    <!-- Don't index the interstitial; it's a redirect, not content. -->
+    <meta name="robots" content="noindex, nofollow" />
+
+    <!-- Google Analytics 4 — same property as the docs site.
+         Static files in /static don't get Docusaurus's injected gtag,
+         so it's included inline here (mirrors static/index.html). -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-VTBXVPZLHB"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() { dataLayer.push(arguments); }
+      gtag('js', new Date());
+      gtag('config', 'G-VTBXVPZLHB', { anonymize_ip: true });
+    </script>
+
+    <style>
+      :root { color-scheme: light dark; }
+      html, body { height: 100%; margin: 0; }
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background: #ffffff;
+        color: #1c1e21;
+      }
+      @media (prefers-color-scheme: dark) {
+        body { background: #18191a; color: #e4e6eb; }
+      }
+      main { text-align: center; padding: 2rem; max-width: 30rem; }
+      .logos { display: flex; align-items: center; justify-content: center; gap: 1rem; margin-bottom: 1.5rem; }
+      .logos img { height: 44px; width: auto; }
+      .logos span { font-size: 1.75rem; color: #9aa0a6; }
+      h1 { font-size: 1.25rem; font-weight: 600; margin: 0 0 0.75rem; }
+      p { font-size: 0.95rem; line-height: 1.5; margin: 0; color: #606770; }
+      @media (prefers-color-scheme: dark) { p { color: #b0b3b8; } }
+      a { color: #2e6cd1; font-weight: 600; }
+      .spinner {
+        width: 22px; height: 22px; margin: 1.25rem auto 0;
+        border: 3px solid rgba(128,128,128,0.3);
+        border-top-color: #2e6cd1;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      @media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="logos">
+        <img src="/img/logo.svg" alt="StarRocks" />
+        <span>+</span>
+        <img src="/img/slack-new-logo.svg" alt="Slack" />
+      </div>
+      <h1>Taking you to the StarRocks Slack community…</h1>
+      <!-- The href below is the single source of truth for the invite link. -->
+      <p>
+        If you're not redirected automatically,
+        <a id="invite" href="https://join.slack.com/t/starrocks/shared_invite/zt-1d0cs3cs2-7eL5Q0cGoBofhyIOx7pLfQ">click here to join</a>.
+      </p>
+      <div class="spinner" aria-hidden="true"></div>
+    </main>
+
+    <script>
+      (function () {
+        var link = document.getElementById('invite');
+        var url = link && link.href;
+        if (!url) { return; }
+
+        var redirected = false;
+        function go() {
+          if (redirected) { return; }
+          redirected = true;
+          window.location.replace(url);
+        }
+
+        // Count the invite use on the docs GA4 property, then redirect.
+        // beacon transport survives the navigation; the timeout guarantees
+        // we always proceed even if GA is blocked or never calls back.
+        try {
+          gtag('event', 'slack_invite_redirect', {
+            transport_type: 'beacon',
+            event_callback: go,
+            event_timeout: 500
+          });
+        } catch (e) { /* GA unavailable — fall through to the timeout. */ }
+
+        setTimeout(go, 600);
+      })();
+    </script>
+  </body>
+</html>

@@ -323,7 +323,7 @@ const config = {
             items: [
               {
                 label: 'Slack',
-                to: 'https://join.slack.com/t/starrocks/shared_invite/zt-1d0cs3cs2-7eL5Q0cGoBofhyIOx7pLfQ',
+                to: 'https://docs.starrocks.io/join/',
                 className: 'header-slack-link',
                 'aria-label': 'Slack workspace',
               },
