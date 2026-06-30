@@ -16,9 +16,37 @@
   box-shadow: var(--copilot-kit-shadow-sm);
 }
 
+/* Closed state: show the custom "Ask AI" pill image (332x118, ~2.81:1) */
+.copilotKitButton:not(.open) {
+  width: auto;
+  height: 3.5rem;
+  aspect-ratio: 332 / 118;
+  border: none;
+  border-radius: 9999px;
+  background-color: transparent;
+  background-image: url("/img/copilot/ask-ai.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  box-shadow: none;
+}
+
+.copilotKitButton:not(.open):hover {
+  background-image: url("/img/copilot/ask-ai-hover.png");
+}
+
+/* Hide the default open-state SVG icon while showing the pill image */
+.copilotKitButton:not(.open) .copilotKitButtonIcon svg {
+  display: none;
+}
+
 .copilotKitButton:hover {
   transform: scale(1.05);
   box-shadow: var(--copilot-kit-shadow-md);
+}
+
+.copilotKitButton:not(.open):hover {
+  box-shadow: none;
 }
 
 .copilotKitButton:active {
