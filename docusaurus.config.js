@@ -149,6 +149,9 @@ const config = {
   ],
   plugins: [
     './src/plugins/tailwind-config.js',
+    // Agent-Friendly Docs: HTML/markdown llms.txt directives + llms.txt splitting.
+    // Only for the default (en) locale — markdown files and llms.txt only exist there.
+    ...(isDefaultLocale ? ['./src/plugins/agent-friendly-docs.js'] : []),
     [
       "@docusaurus/plugin-content-docs",
       {
