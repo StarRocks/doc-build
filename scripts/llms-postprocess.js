@@ -54,8 +54,8 @@ function main() {
   const result = splitLlmsTxt(buildDir);
   if (result) {
     console.log(
-      `[llms-postprocess] Split llms.txt: root index ${result.rootBytes} chars, ` +
-        `${result.fileCount} section files (largest ${result.maxSectionBytes} chars).`,
+      `[llms-postprocess] Split llms.txt: root index ${result.rootBytes} bytes, ` +
+        `${result.fileCount} section files (largest ${result.maxSectionBytes} bytes).`,
     );
   } else {
     console.log('[llms-postprocess] No llms.txt found; skipped split.');
@@ -127,7 +127,7 @@ function splitLlmsTxt(buildDir) {
 
   fs.writeFileSync(rootPath, rootBody, 'utf8');
   return {
-    rootBytes: rootBody.length,
+    rootBytes: byteLen(rootBody),
     fileCount: state.fileCount,
     maxSectionBytes: state.maxSectionBytes,
   };
@@ -210,7 +210,8 @@ function writeSectionFile(buildDir, baseSegs, body, state) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, body, 'utf8');
   state.fileCount++;
-  if (body.length > state.maxSectionBytes) state.maxSectionBytes = body.length;
+  const size = byteLen(body);
+  if (size > state.maxSectionBytes) state.maxSectionBytes = size;
   return fileUrl;
 }
 
@@ -256,9 +257,15 @@ function parseLink(line) {
   return { raw: line, url, segs };
 }
 
+// UTF-8 byte length — the size budgets are in bytes, and docs contain some
+// non-ASCII (curly quotes, etc.), so measure bytes, not UTF-16 char count.
+function byteLen(str) {
+  return Buffer.byteLength(str, 'utf8');
+}
+
 function renderedBytes(entries) {
   let n = 0;
-  for (const e of entries) n += e.raw.length + 1;
+  for (const e of entries) n += byteLen(e.raw) + 1;
   return n;
 }
 

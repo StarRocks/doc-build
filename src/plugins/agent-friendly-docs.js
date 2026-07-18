@@ -56,11 +56,16 @@ module.exports = function agentFriendlyDocsPlugin(context) {
             tagName: 'div',
             attributes: {
               'data-llms-directive': '',
+              // Hidden from assistive tech: this is an agent-facing hint, not
+              // human content. The anchor is kept (agents/detectors look for a
+              // link to llms.txt) but made non-focusable via tabindex="-1" so
+              // keyboard users can't tab to an invisible link.
+              'aria-hidden': 'true',
               style: HIDDEN_STYLE,
             },
             innerHTML:
               `For AI agents: a machine-readable documentation index is available at ` +
-              `<a href="${LLMS_TXT_URL}">${LLMS_TXT_URL}</a>. ` +
+              `<a href="${LLMS_TXT_URL}" tabindex="-1">${LLMS_TXT_URL}</a>. ` +
               `Every documentation page is also available as Markdown by appending ".md" to its URL.`,
           },
         ],
