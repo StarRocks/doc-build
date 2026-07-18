@@ -72,10 +72,26 @@ function addMarkdownDirective(buildDir) {
     const content = fs.readFileSync(file, 'utf8');
     // Idempotent: skip if the directive is already present near the top.
     if (content.startsWith('> For the complete documentation index')) continue;
-    fs.writeFileSync(file, `${MD_DIRECTIVE}\n\n${content}`, 'utf8');
+    fs.writeFileSync(file, `${MD_DIRECTIVE}\n\n${unescapeIntrawordUnderscores(content)}`, 'utf8');
     count++;
   }
   return count;
+}
+
+// The llms-txt plugin escapes underscores (\_) in prose/headings to avoid
+// accidental Markdown emphasis. For an underscore *between* two word characters
+// (e.g. mv_refresh_total_success_jobs), CommonMark never treats it as emphasis,
+// so the backslash is redundant: rendering is identical with or without it.
+// Removing it keeps identifiers intact for agents reading the raw .md and for
+// tooling that doesn't unescape Markdown before matching. Only intra-word
+// escapes are touched; a leading/standalone \_ (which could be real emphasis)
+// is left alone. Escapes inside code spans/blocks aren't present — Markdown
+// doesn't process escapes there, so the plugin emits raw underscores in code.
+function unescapeIntrawordUnderscores(md) {
+  // Require an alphanumeric on both sides (not just \w, which includes "_"):
+  // this targets identifiers like foo_bar_baz and avoids touching escaped
+  // emphasis runs such as \_\_bold\_\_.
+  return md.replace(/(?<=[A-Za-z0-9])\\_(?=[A-Za-z0-9])/g, '_');
 }
 
 // -----------------------------------------------------------------------------
