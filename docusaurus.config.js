@@ -51,7 +51,14 @@ const config = {
       rspackPersistentCache: false, // Speeds up subsequent builds
       swcJsLoader: true, // Uses SWC for faster JS transpilation
       swcJsMinimizer: true, // Uses SWC for faster JS minification
-      swcHtmlMinimizer: true, // Uses SWC for faster HTML minification
+      // SWC HTML minification strips optional closing tags (</td>, </tr>,
+      // </body>, ...). Lenient HTML parsers used by many agent tools — and by
+      // the afdocs markdown-content-parity checker (node-html-parser) — don't
+      // implement HTML5 implicit tag closing, so they fail to nest <body>/<main>/
+      // <table> and fall back to whole-document text, producing false content
+      // mismatches. Docusaurus's default (Terser) minifier keeps closing tags,
+      // so the emitted HTML stays parseable. See scripts/llms-postprocess.js.
+      swcHtmlMinimizer: false,
       lightningCssMinimizer: true, // Uses Lightning CSS for faster CSS minification
       mdxCrossCompilerCache: true, // Speeds up MDX compilation
     },
@@ -149,6 +156,9 @@ const config = {
   ],
   plugins: [
     './src/plugins/tailwind-config.js',
+    // Agent-Friendly Docs: HTML/markdown llms.txt directives + llms.txt splitting.
+    // Only for the default (en) locale — markdown files and llms.txt only exist there.
+    ...(isDefaultLocale ? ['./src/plugins/agent-friendly-docs.js'] : []),
     [
       "@docusaurus/plugin-content-docs",
       {

@@ -64,11 +64,19 @@ jobs:
           export BROWSERSLIST_IGNORE_OLD_DATA=true
           yarn build
 
+      - name: Post-process llms.txt and markdown for agents
+        run: node scripts/llms-postprocess.js build
+
       - name: sync to S3
         env:
           BUCKET_SECRET: ${{ secrets.AWS_OSS_DOCS_PROD_BUCKET }}
         run: |
           aws s3 sync build/ s3://$BUCKET_SECRET/ --quiet --delete $*
+          # Serve Markdown twins as text/markdown so agents (and content
+          # negotiation) get a readable response body, not a file download.
+          aws s3 cp build/ s3://$BUCKET_SECRET/ --quiet --recursive \
+            --exclude "*" --include "*.md" \
+            --content-type "text/markdown; charset=utf-8"
 
       - name: clean cdn cache
         env:
