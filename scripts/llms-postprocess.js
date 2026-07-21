@@ -30,8 +30,24 @@ const SITE_URL = (process.env.SITE_URL || 'https://docs.starrocks.io').replace(/
 const LLMS_TXT_URL = `${SITE_URL}/llms.txt`;
 const SITEMAP_URL = `${SITE_URL}/sitemap.xml`;
 
-// Keep every section file comfortably under the 50,000-char spec target.
-const MAX_SECTION_BYTES = 45000;
+// Soft size budget before a section file splits into sub-indexes. Set high
+// enough that navigationally-important trees stay flat: the SQL function
+// reference (~442 pages, ~81K of links) collapses into a SINGLE flat index an
+// agent can scan in one fetch, instead of 20 per-category sub-indexes it has to
+// drill through. Section files are opt-in (an agent fetches one only after
+// choosing to drill in), so a larger-but-flatter file beats a deep tree here;
+// the ~100K agent-truncation concern applies to the mandatory root index, not
+// these. sql-reference as a whole (~136K) still exceeds this and splits one
+// level (into sql-functions, sql-statements, …), which is the intended cutoff.
+const MAX_SECTION_BYTES = 120000;
+
+// Hard cap on how many path levels deep the split may recurse. depth = number
+// of URL path segments identifying a node (e.g. ['docs','sql-reference',
+// 'sql-functions'] is depth 3). A node at or past this depth is always written
+// as a flat leaf regardless of size, bounding the worst-case navigation to
+// root -> section -> subsection -> .md (3 index fetches). Keep this small:
+// every extra level is another hop an agent can stop short at or mis-navigate.
+const MAX_SPLIT_DEPTH = 3;
 
 // Sections smaller than this (or with very few links) are inlined directly into
 // the root index as .md links rather than getting their own section file.
@@ -210,7 +226,7 @@ function emitNode(buildDir, entries, baseSegs, name, state) {
     }
   }
 
-  const canSplit = groups.size > 0 && depth < 12;
+  const canSplit = groups.size > 0 && depth < MAX_SPLIT_DEPTH;
 
   // Leaf: small enough, or nothing left to split by.
   if (bytes <= MAX_SECTION_BYTES || !canSplit) {
