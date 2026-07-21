@@ -28,6 +28,7 @@ const path = require('path');
 // the environment being built (prod vs. staging).
 const SITE_URL = (process.env.SITE_URL || 'https://docs.starrocks.io').replace(/\/$/, '');
 const LLMS_TXT_URL = `${SITE_URL}/llms.txt`;
+const SITEMAP_URL = `${SITE_URL}/sitemap.xml`;
 
 // Keep every section file comfortably under the 50,000-char spec target.
 const MAX_SECTION_BYTES = 45000;
@@ -50,6 +51,13 @@ function main() {
   console.log(
     `[llms-postprocess] Prepended markdown directive to ${mdCount} .md files.`,
   );
+
+  const robotsFixed = fixRobotsSitemap(buildDir);
+  if (robotsFixed) {
+    console.log(`[llms-postprocess] robots.txt Sitemap: -> ${SITEMAP_URL}`);
+  } else {
+    console.log('[llms-postprocess] robots.txt not found or unchanged; skipped Sitemap rewrite.');
+  }
 
   const result = splitLlmsTxt(buildDir);
   if (result) {
@@ -92,6 +100,36 @@ function unescapeIntrawordUnderscores(md) {
   // this targets identifiers like foo_bar_baz and avoids touching escaped
   // emphasis runs such as \_\_bold\_\_.
   return md.replace(/(?<=[A-Za-z0-9])\\_(?=[A-Za-z0-9])/g, '_');
+}
+
+// -----------------------------------------------------------------------------
+// 1b. robots.txt Sitemap URL — make it environment-aware
+// -----------------------------------------------------------------------------
+//
+// static/robots.txt hard-codes the PROD sitemap (`Sitemap: https://docs.starrocks.io/
+// sitemap.xml`). On staging that URL is cross-origin, so sitemap-aware crawlers and
+// scorecards (e.g. afdocs.dev) won't treat it as ground truth — the staging
+// llms-txt-coverage check ends up SKIPped ("No sitemap found") rather than
+// reflecting the same result prod shows. Rewrite the Sitemap: line to the site
+// being built (SITE_URL) so staging points at its own same-origin sitemap.
+// Only the Sitemap: line is touched; Disallow/Allow rules are left as authored.
+function fixRobotsSitemap(buildDir) {
+  const robotsPath = path.join(buildDir, 'robots.txt');
+  if (!fs.existsSync(robotsPath)) return false;
+
+  const content = fs.readFileSync(robotsPath, 'utf8');
+  // Match an existing "Sitemap: <url>" line (case-insensitive directive).
+  const re = /^([ \t]*Sitemap:[ \t]*).*$/im;
+  let next;
+  if (re.test(content)) {
+    next = content.replace(re, `$1${SITEMAP_URL}`);
+  } else {
+    // No directive present — append one so crawlers can still discover it.
+    next = `${content.replace(/\s*$/, '')}\n\nSitemap: ${SITEMAP_URL}\n`;
+  }
+  if (next === content) return false;
+  fs.writeFileSync(robotsPath, next, 'utf8');
+  return true;
 }
 
 // -----------------------------------------------------------------------------
