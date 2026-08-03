@@ -173,6 +173,29 @@ column list contains no IP, cookie, or header-blob field. If it does, the field
 selection did not apply and the logging should be reconfigured before any data
 is queried.
 
+### While you are in this distribution: verify the Markdown function
+
+This request is normally bundled with a redeploy of the content-negotiation
+CloudFront Function (see [`README.md`](./README.md)). After that redeploy, run
+the check below. It is the one that catches the failure mode that has already
+happened once in production — the function published *without* its `EXCLUDED`
+map, so every section index page returned 404 to any client asking for Markdown,
+while browsers saw nothing wrong:
+
+```bash
+# Excluded index pages must stay HTML — a 404 here means EXCLUDED is missing
+for r in loading/ administration/ sql-reference/sql-functions/ introduction/; do
+  md=$(curl -s -o /dev/null -w '%{http_code}' -H 'Accept: text/markdown' \
+       "https://docs.starrocks.io/docs/$r")
+  plain=$(curl -s -o /dev/null -w '%{http_code}' "https://docs.starrocks.io/docs/$r")
+  printf '%-36s plain:%s markdown:%s%s\n' "$r" "$plain" "$md" \
+    "$([ "$md" = 404 ] && [ "$plain" = 200 ] && echo '   <-- BROKEN')"
+done
+```
+
+Expect `plain:200 markdown:200` on every line, with `content-type: text/html`.
+The full sweep, and the reasoning behind it, is in `README.md`.
+
 ---
 
 ## Optional add-on (only if the Function is being redeployed anyway)
@@ -205,8 +228,28 @@ every query in `analytics/agent-traffic/queries.sql` works without it.
 Open a GitHub issue in `StarRocks/doc-build` linking to this file, and **ping it
 in Slack** — per the issue #60 experience, GitHub issues alone do not get seen.
 
-Lead the issue with the two facts that make it an easy approval:
+Getting this person's attention is the scarce resource, so make it **one request
+covering both CloudFront items**, and lead with the bug rather than the
+enhancement:
 
-1. **Zero risk.** Logging does not touch the request path and cannot change a
-   response. No staging round-trip needed.
-2. **More private than the status quo.** No IPs, no cookies, 30-day retention.
+1. **Redeploy the content-negotiation function** from
+   `viewer-request-markdown.js` per [`README.md`](./README.md). This is a **live
+   bug fix, not an enhancement**: the published function is missing its
+   `EXCLUDED` map, so all ~19 section index pages return 404 to any client
+   sending `Accept: text/markdown`. Verified broken on prod and staging. Then
+   run the verification sweep above.
+2. **Enable standard logging (v2)** as specified in this document.
+
+Two facts make the logging half an easy approval:
+
+- **Zero risk.** Logging does not touch the request path and cannot change a
+  response. No staging round-trip needed.
+- **More private than the status quo.** No IPs, no cookies, 30-day retention.
+
+Both items from issue #60 — content negotiation and real 404s — are already
+applied on prod and need no further action. Confirmed by:
+
+```bash
+curl -sI https://docs.starrocks.io/docs/this-page-does-not-exist/ | head -1
+# HTTP/2 404   (not a soft 404 returning 200)
+```
