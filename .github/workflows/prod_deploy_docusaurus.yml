@@ -56,6 +56,12 @@ jobs:
           yarn install --frozen-lockfile
       
       - run: npm run copy
+
+      # Fails fast if the CloudFront Function's route exclusions have drifted
+      # from src/agentDocsRoutes.js — see the script header for why it matters.
+      - name: Check CloudFront markdown exclusions are in sync
+        run: node scripts/check-cloudfront-excludes.js
+
       - name: Build website
         run:  |
           export NODE_OPTIONS="--max_old_space_size=12288"

@@ -7,6 +7,9 @@ export DOCUSAURUS_IGNORE_SSG_WARNINGS=true
 export NODE_OPTIONS="--max-old-space-size=12288"
 export DOCUSAURUS_SSR_CONCURRENCY=2
 export DOCUSAURUS_PERF_LOGGER=false
+# Fails fast if the CloudFront Function's route exclusions have drifted from
+# src/agentDocsRoutes.js.
+node scripts/check-cloudfront-excludes.js
 yarn clear && yarn build
 # Agent-friendly docs: prepend markdown directives + split llms.txt into a
 # root index and per-section files. Must run AFTER the build completes.

@@ -6,6 +6,7 @@
 
 import {themes as prismThemes} from 'prism-react-renderer';
 import versions from './versions.json';
+import agentDocsRoutes from './src/agentDocsRoutes.js';
 
 // Used to limit build to just two versions for debugging
 const isBuildFast = !!process.env.BUILD_FAST;
@@ -199,32 +200,8 @@ const config = {
           includePages: false,
           includeDocs: true,
           includeVersionedDocs: false,
-          excludeRoutes: [
-            // Pure navigation pages — no content for LLMs
-            '/docs/cover_pages/**',
-            '/docs/category/**',
-            // DocCardList-only section index pages (navigation, no content)
-            // Add new ones here as the nav structure evolves
-            '/docs/administration/',
-            '/docs/administration/management/',
-            '/docs/administration/management/configuration/',
-            '/docs/benchmarking/',
-            '/docs/data_source/catalog/catalog_intro/',
-            '/docs/faq/',
-            '/docs/integrations/',
-            '/docs/integrations/streaming/',
-            '/docs/integrations/streaming/apache_kafka/',
-            '/docs/introduction/',
-            '/docs/loading/',
-            '/docs/loading/loading_introduction/loading_overview/',
-            '/docs/loading/objectstorage/',
-            '/docs/project_help/',
-            '/docs/sql-reference/data-types/',
-            '/docs/sql-reference/data-types/date-types/',
-            '/docs/sql-reference/sql-functions/',
-            '/docs/sql-reference/sql-functions/date-time-functions/',
-            '/docs/unloading/',
-          ],
+          // Single source of truth: src/agentDocsRoutes.js
+          excludeRoutes: agentDocsRoutes.EXCLUDE_ROUTE_PATTERNS,
         },
         llmsTxt: {
           enableLlmsFullTxt: true,
@@ -232,32 +209,7 @@ const config = {
           includePages: false,
           includeDocs: true,
           includeVersionedDocs: false,
-          excludeRoutes: [
-            // Pure navigation pages — no content for LLMs
-            '/docs/cover_pages/**',
-            '/docs/category/**',
-            // DocCardList-only section index pages (navigation, no content)
-            // Add new ones here as the nav structure evolves
-            '/docs/administration/',
-            '/docs/administration/management/',
-            '/docs/administration/management/configuration/',
-            '/docs/benchmarking/',
-            '/docs/data_source/catalog/catalog_intro/',
-            '/docs/faq/',
-            '/docs/integrations/',
-            '/docs/integrations/streaming/',
-            '/docs/integrations/streaming/apache_kafka/',
-            '/docs/introduction/',
-            '/docs/loading/',
-            '/docs/loading/loading_introduction/loading_overview/',
-            '/docs/loading/objectstorage/',
-            '/docs/project_help/',
-            '/docs/sql-reference/data-types/',
-            '/docs/sql-reference/data-types/date-types/',
-            '/docs/sql-reference/sql-functions/',
-            '/docs/sql-reference/sql-functions/date-time-functions/',
-            '/docs/unloading/',
-          ],
+          excludeRoutes: agentDocsRoutes.EXCLUDE_ROUTE_PATTERNS,
           autoSectionDepth: 2,
 
           // Site metadata
