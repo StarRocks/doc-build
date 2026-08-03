@@ -91,6 +91,13 @@ function docHasMarkdownTwin(uri) {
 
   // Specific index/landing pages excluded from Markdown generation.
   var EXCLUDED = {
+    // Author-facing templates: `unlisted: true` in source, so they are hidden
+    // from humans (noindex, no sitemap) and must be hidden from agents too.
+    '/docs/loading/Loading_data_template/': true,
+    '/docs/sql-reference/How_to_Write_Functions_Documentation/': true,
+    '/docs/sql-reference/SQL_command_template/': true,
+    '/docs/sql-reference/template_for_config/': true,
+    // DocCardList-only section index pages.
     '/docs/administration/': true,
     '/docs/administration/management/': true,
     '/docs/administration/management/configuration/': true,

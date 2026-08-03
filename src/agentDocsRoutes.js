@@ -24,9 +24,28 @@ const EXCLUDED_ROUTE_TREES = [
   '/docs/category/',
 ];
 
+// Author-facing templates. These carry `unlisted: true`, which hides them from
+// the sidebar, the sitemap, and search engines (noindex) — but the llms-txt
+// plugin does not honor it, so without this list they would be hidden from
+// Google and advertised to agents, which is exactly backwards. They teach doc
+// contributors how to write a page; an agent surfacing their placeholder prose
+// ("Default: *the default value of this parameter*") as though it were
+// reference material is actively misleading.
+//
+// Note this covers only the templates. The other `unlisted: true` pages
+// (loading/tencent, huawei, alibaba, s3_compatible) are real user content that
+// is unlisted for navigation reasons, and agents should keep getting them.
+const EXCLUDED_TEMPLATE_ROUTES = [
+  '/docs/loading/Loading_data_template/',
+  '/docs/sql-reference/How_to_Write_Functions_Documentation/',
+  '/docs/sql-reference/SQL_command_template/',
+  '/docs/sql-reference/template_for_config/',
+];
+
 // Individual DocCardList-only section index pages (navigation, no content).
 // Add new ones here as the nav structure evolves — this is the only list.
 const EXCLUDED_ROUTES = [
+  ...EXCLUDED_TEMPLATE_ROUTES,
   '/docs/administration/',
   '/docs/administration/management/',
   '/docs/administration/management/configuration/',
