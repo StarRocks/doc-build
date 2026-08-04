@@ -151,6 +151,7 @@ function stripEmptyHtmlComments(md) {
   const out = [];
   let inFence = false;
   let fenceMarker = null;
+  let fenceLength = 0;
   let swallowNextBlank = false;
 
   for (const line of lines) {
@@ -159,9 +160,15 @@ function stripEmptyHtmlComments(md) {
       if (!inFence) {
         inFence = true;
         fenceMarker = fence[1][0];
-      } else if (fence[1][0] === fenceMarker) {
+        fenceLength = fence[1].length;
+      } else if (fence[1][0] === fenceMarker && fence[1].length >= fenceLength) {
+        // CommonMark: a closing fence must use the same character and be at
+        // least as long as the opening one. Without the length test, a ```
+        // line nested inside a ```` block would close it early and stripping
+        // would resume inside what is still code.
         inFence = false;
         fenceMarker = null;
+        fenceLength = 0;
       }
       out.push(line);
       continue;
