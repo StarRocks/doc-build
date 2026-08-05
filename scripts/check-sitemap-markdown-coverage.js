@@ -47,31 +47,35 @@ const MIN_COVERAGE = 0.9;
 
 const buildDir = path.resolve(process.argv[2] || 'build');
 const sitemapPath = path.join(buildDir, 'sitemap.xml');
-
-if (!fs.existsSync(sitemapPath)) {
-  console.error(
-    `\n✖ Sitemap coverage: no sitemap.xml at ${path.relative(process.cwd(), sitemapPath)}\n` +
-      `  Run this after \`yarn build\`.\n`,
-  );
-  process.exit(1);
-}
-
-const xml = fs.readFileSync(sitemapPath, 'utf8');
-const locs = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
-
-if (locs.length === 0) {
-  console.error('\n✖ Sitemap coverage: sitemap.xml contains no <loc> entries.\n');
-  process.exit(1);
-}
+const algoliaSitemapPath = path.join(buildDir, 'sitemap-algolia.xml');
 
 // Site URL varies by environment (prod vs. staging), so compare pathnames.
-const pathnames = locs.map((loc) => {
-  try {
-    return new URL(loc).pathname;
-  } catch {
-    return loc;
+function readSitemapPathnames(file, label) {
+  if (!fs.existsSync(file)) {
+    console.error(
+      `\n✖ Sitemap coverage: no ${label} at ${path.relative(process.cwd(), file)}\n` +
+        `  Run this after \`yarn build\`.\n`,
+    );
+    process.exit(1);
   }
-});
+  const locs = [...fs.readFileSync(file, 'utf8').matchAll(/<loc>([^<]+)<\/loc>/g)].map(
+    (m) => m[1],
+  );
+  if (locs.length === 0) {
+    console.error(`\n✖ Sitemap coverage: ${label} contains no <loc> entries.\n`);
+    process.exit(1);
+  }
+  return locs.map((loc) => {
+    try {
+      return new URL(loc).pathname;
+    } catch {
+      return loc;
+    }
+  });
+}
+
+const pathnames = readSitemapPathnames(sitemapPath, 'sitemap.xml');
+const algoliaPathnames = readSitemapPathnames(algoliaSitemapPath, 'sitemap-algolia.xml');
 
 const ARCHIVED = /^\/docs\/[0-9]+\.[0-9]+\//;
 const sample = pathnames.slice(0, SAMPLE_SIZE);
@@ -113,9 +117,42 @@ if (coverage < MIN_COVERAGE) {
   process.exit(1);
 }
 
+// 3. sitemap-algolia.xml is Algolia DocSearch's ground truth and must stay a
+//    complete superset of the public sitemap. These two assertions are what make
+//    it safe to trim /sitemap.xml down to the current version: if the trim ever
+//    takes archived versions out of BOTH files, search silently loses 3.1–4.0
+//    and nothing else in the pipeline would notice.
+const algoliaSet = new Set(algoliaPathnames);
+const missingFromAlgolia = pathnames.filter((p) => !algoliaSet.has(p));
+if (missingFromAlgolia.length) {
+  console.error(
+    `\n✖ Sitemap coverage: ${missingFromAlgolia.length} URL(s) are in sitemap.xml but ` +
+      `NOT in sitemap-algolia.xml.\n\n` +
+      `The Algolia sitemap must be a superset of the public one — it is what the\n` +
+      `DocSearch crawler indexes. Its plugin instance in docusaurus.config.js should\n` +
+      `carry no ignorePatterns.\n\n` +
+      missingFromAlgolia.slice(0, 10).map((p) => `    ${p}`).join('\n') +
+      (missingFromAlgolia.length > 10 ? `\n    … and ${missingFromAlgolia.length - 10} more` : '') +
+      `\n`,
+  );
+  process.exit(1);
+}
+
+const algoliaArchived = algoliaPathnames.filter((p) => ARCHIVED.test(p)).length;
+if (algoliaArchived === 0) {
+  console.error(
+    `\n✖ Sitemap coverage: sitemap-algolia.xml contains no archived-version URLs.\n\n` +
+      `Search is supported for every version, so the Algolia sitemap must list the\n` +
+      `archived doc trees (/docs/4.0/…, /docs/3.5/…, …). Its plugin instance in\n` +
+      `docusaurus.config.js must not filter them out.\n`,
+  );
+  process.exit(1);
+}
+
 const archivedTotal = pathnames.filter((p) => ARCHIVED.test(p)).length;
 console.log(
   `✔ Sitemap markdown coverage: ${withTwin.length}/${sample.length} of the first ` +
     `${SAMPLE_SIZE} URLs have a Markdown twin ` +
-    `(${pathnames.length} URLs total; ${archivedTotal} archived-version URLs, all sorted to the end).`,
+    `(sitemap.xml: ${pathnames.length} URLs, ${archivedTotal} archived; ` +
+    `sitemap-algolia.xml: ${algoliaPathnames.length} URLs, ${algoliaArchived} archived).`,
 );

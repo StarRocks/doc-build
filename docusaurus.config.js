@@ -219,6 +219,36 @@ const config = {
     // Agent-Friendly Docs: HTML/markdown llms.txt directives + llms.txt splitting.
     // Only for the default (en) locale — markdown files and llms.txt only exist there.
     ...(isDefaultLocale ? ['./src/plugins/agent-friendly-docs.js'] : []),
+    // Second sitemap, for Algolia DocSearch only.
+    // -------------------------------------------------------------------------
+    // /sitemap.xml is the PUBLIC sitemap: what robots.txt advertises and what
+    // search engines and agent-readiness checkers consume. It should describe the
+    // canonical surface — the current version — and nothing that robots.txt turns
+    // around and Disallows.
+    //
+    // Algolia needs the opposite: search is supported for EVERY version, so its
+    // crawler needs all ~6,900 URLs. Those two audiences were in conflict only
+    // because they shared one file. They don't have to: the Algolia crawler
+    // config takes an explicit `sitemaps: [...]` list, so it can be pointed at a
+    // file of its own that robots.txt never mentions.
+    //
+    // This instance emits the complete set (no ignorePatterns, no reordering).
+    // The preset's default instance owns /sitemap.xml.
+    //
+    // ROLLOUT — this file is additive and changes nothing yet. /sitemap.xml is
+    // still the all-versions list, so search keeps working no matter what.
+    // Trimming /sitemap.xml to the current version is a SEPARATE, LATER commit,
+    // and must not land until the Algolia crawler config has been repointed at
+    // /sitemap-algolia.xml and a recrawl confirmed to still cover archived
+    // versions. Trimming first would silently drop 3.1–4.0 out of search.
+    // See cloudfront/README.md for the same hazard on the CDN side.
+    [
+      '@docusaurus/plugin-sitemap',
+      {
+        id: 'algolia',
+        filename: 'sitemap-algolia.xml',
+      },
+    ],
     [
       "@docusaurus/plugin-content-docs",
       {
