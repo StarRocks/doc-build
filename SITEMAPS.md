@@ -44,33 +44,31 @@ Rollout complete. The guard below now enforces the end state.
 
 ### Step 2: the crawler config change
 
-In the Algolia Crawler editor for the StarRocks docs crawler, list **both**:
+In the Algolia Crawler editor for the StarRocks docs crawler:
 
 ```js
 new Crawler({
   // ...
-  sitemaps: [
-    "https://docs.starrocks.io/sitemap.xml",
-    "https://docs.starrocks.io/sitemap-algolia.xml",
-  ],
+  sitemaps: ["https://docs.starrocks.io/sitemap-algolia.xml"],
   // ...
 });
 ```
 
-Listing both — rather than swapping one for the other — is what makes the
-rollout order stop mattering, because the union is always the complete set:
+**One entry, deliberately — do not add `/sitemap.xml` as a fallback.** Listing
+both would make the crawler resilient to `/sitemap-algolia.xml` disappearing,
+which sounds good and isn't: the crawl would quietly succeed off the fallback and
+nobody would learn that a deploy had dropped the file. A single entry means a
+missing file fails the crawl, the failure sends a notification, and a failed
+crawl is not written to the index — so the breakage is loud and harmless instead
+of silent. (Decision: Dan, 2026-08-05.)
 
-| | `/sitemap.xml` | `/sitemap-algolia.xml` | union |
-| --- | --- | --- | --- |
-| Before step 1 deploys | all versions | 404 | all versions |
-| After step 1 | all versions | all versions | all versions |
-| After step 3 | current only | all versions | all versions |
+This rests on a failed sitemap fetch actually failing the crawl rather than
+degrading to `startUrls` link-following, which would write a partial index. Worth
+confirming against a deliberately bad URL once crawler logging is enabled.
 
-There is no window where the crawler can lose archived versions, so step 3 can
-land whenever it's convenient. Swapping to the Algolia URL alone works too, but
-only *after* step 1 is deployed — before that it points at a 404.
-
-Keeping both permanently is fine and is the recommended end state.
+Nothing in the build can silently remove the file: the guard below aborts the
+build when `sitemap-algolia.xml` is missing, and it runs *before* the S3 sync, so
+a broken build leaves the deployed file untouched.
 
 Staging has its own copy at `https://docs-stage.starrocks.io/sitemap-algolia.xml`
 if a separate staging crawler exists.
