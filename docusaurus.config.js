@@ -23,6 +23,27 @@ const isBuildFast = !!process.env.BUILD_FAST;
 const isVersioningDisabled = !!process.env.DISABLE_VERSIONING || false;
 const isDefaultLocale = (process.env.DOCUSAURUS_CURRENT_LOCALE ?? 'en') === 'en';
 
+// Which doc versions this build ships, and which one is "latest".
+// Hoisted out of the preset so the sitemap config below can derive the archived
+// version prefixes from the same source rather than repeating the list.
+//
+// lastVersion is served unprefixed at /docs/...; every other included version is
+// served at /docs/<version>/... .
+const lastVersion = isVersioningDisabled ? 'current' : '4.1';
+
+const includedVersions = (() => {
+  if (isVersioningDisabled) {
+    return ['current'];
+  }
+  if (isBuildFast) {
+    return [...versions.slice(0, 2)];
+  }
+  return ['4.1', '4.0', '3.5', '3.4', '3.3', '3.2', '3.1'];
+})();
+
+// Archived (non-latest) versions, i.e. the ones that get a /docs/<version>/ prefix.
+const archivedVersions = includedVersions.filter((v) => v !== lastVersion);
+
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'StarRocks',
@@ -102,24 +123,10 @@ const config = {
           // but we support multiple versions, so the banner is set
           // to none on the versions other than latest (latest
           // doesn't get a banner by default).
-          lastVersion: (() => {
-            if (isVersioningDisabled) {
-              return 'current';
-            } else {
-              return '4.1';
-            }
-          })(),
+          lastVersion,
 
           //onlyIncludeVersions: ['4.1', '4.0', '3.5', '3.4', '3.3', 3.2', '3.1'],
-          onlyIncludeVersions: (() => {
-            if (isVersioningDisabled) {
-              return ['current'];
-            } else if (isBuildFast){
-              return [...versions.slice(0, 2)];
-            } else {
-              return ['4.1', '4.0', '3.5', '3.4', '3.3', '3.2', '3.1'];
-            }
-          })(),
+          onlyIncludeVersions: includedVersions,
 
           versions: (() => {
             if (isVersioningDisabled) {
@@ -139,6 +146,58 @@ const config = {
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
+        },
+        // Order the sitemap: substantive current-version content, then
+        // navigation stubs, then archived versions.
+        //
+        // Docusaurus emits archived versions FIRST, and with seven versions live
+        // they are ~84% of the sitemap — ~5,800 URLs ahead of the first
+        // current-version page. That ordering breaks agent-readiness checkers:
+        // they probe content negotiation by sampling from the HEAD of the
+        // sitemap, not uniformly at random. Archived pages deliberately have no
+        // Markdown twin (the llms-txt plugin runs with includeVersionedDocs:
+        // false, so the CloudFront Function passes them through as HTML), so
+        // every sampled page returned HTML and afdocs.dev reported "Server
+        // ignores Accept: text/markdown (0/50 sampled pages return markdown)"
+        // while negotiation was in fact working on all current docs.
+        //
+        // This REORDERS rather than trims. Archived versions must stay IN the
+        // sitemap: it is Algolia DocSearch's ground truth, search is supported
+        // for every version, and static/robots.txt carries an explicit
+        // `User-Agent: Algolia Crawler / Allow: /` exemption so the crawler can
+        // reach the trees other user-agents are Disallow'ed from. Dropping them
+        // would silently break search for 3.1–4.0. Sitemap order carries no
+        // meaning to search engines, so listing the canonical, substantive pages
+        // first costs nothing.
+        //
+        // The middle tier matters as much as the last one: ~90 auto-generated
+        // /docs/category/** DocCardList stubs sort alphabetically into the front
+        // of the current-version block. They carry no unique content — which is
+        // exactly why agentDocsRoutes excludes them from Markdown generation — so
+        // leaving them there would put a ~90-URL twin-less run near the head and
+        // reintroduce the same sampling problem a few hundred entries in.
+        //
+        // hasMarkdownTwin() is the repo's single source of truth for "this route
+        // has real content", so the tiers derive from it rather than from a
+        // second hand-maintained list.
+        //
+        // scripts/check-sitemap-markdown-coverage.js fails the build if this
+        // regresses.
+        sitemap: {
+          createSitemapItems: async ({defaultCreateSitemapItems, ...rest}) => {
+            const items = await defaultCreateSitemapItems(rest);
+            const archivedPrefixes = archivedVersions.map((v) => `/docs/${v}/`);
+            const tierOf = (item) => {
+              const {pathname} = new URL(item.url);
+              // 2: archived versions (/docs/4.0/..., /docs/3.5/..., ...)
+              if (archivedPrefixes.some((p) => pathname.startsWith(p))) return 2;
+              // 0: current-version pages with real content; 1: navigation stubs
+              // (/docs/category/**, /docs/cover_pages/**, section indexes, /search/)
+              return agentDocsRoutes.hasMarkdownTwin(pathname) ? 0 : 1;
+            };
+            // Stable partition: relative order within each tier is preserved.
+            return [0, 1, 2].flatMap((tier) => items.filter((i) => tierOf(i) === tier));
+          },
         },
         gtag: {
           trackingID: 'G-VTBXVPZLHB',

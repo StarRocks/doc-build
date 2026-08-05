@@ -73,6 +73,11 @@ jobs:
       - name: Post-process llms.txt and markdown for agents
         run: node scripts/llms-postprocess.js build
 
+      # Archived versions flooding the head of the sitemap makes agent checkers
+      # sampling it conclude Accept: text/markdown is ignored — see the script header.
+      - name: Check sitemap markdown coverage
+        run: node scripts/check-sitemap-markdown-coverage.js build
+
       - name: sync to S3
         env:
           BUCKET_SECRET: ${{ secrets.AWS_OSS_DOCS_PROD_BUCKET }}

@@ -14,4 +14,7 @@ yarn clear && yarn build
 # Agent-friendly docs: prepend markdown directives + split llms.txt into a
 # root index and per-section files. Must run AFTER the build completes.
 node scripts/llms-postprocess.js build
+# Fails if archived versions flooded the sitemap, which makes agent checkers
+# sampling its head conclude that Accept: text/markdown is ignored.
+node scripts/check-sitemap-markdown-coverage.js build
 yarn serve
