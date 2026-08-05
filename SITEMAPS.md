@@ -34,22 +34,42 @@ working. See `scripts/check-sitemap-markdown-coverage.js`.
 
 - [x] **Step 1 — emit `/sitemap-algolia.xml`.** Additive; `/sitemap.xml` still
       lists every version, so search cannot break regardless of crawler config.
-- [ ] **Step 2 — repoint the Algolia crawler** (manual, in the hosted Algolia
-      Crawler admin — not a file in this repo).
-- [ ] **Step 3 — trim `/sitemap.xml` to the current version.** Do **not** land
-      this until step 2 is verified.
+- [x] **Step 2 — repoint the Algolia crawler** (manual, in the hosted Algolia
+      Crawler admin — not a file in this repo). Done 2026-08-05.
+- [ ] **Step 3 — trim `/sitemap.xml` to the current version.** Safe to land once
+      step 1 is deployed *and* the crawler lists both sitemaps (see below). If
+      the crawler lists only `/sitemap-algolia.xml`, verify a recrawl still
+      returns archived-version records first.
 
 ### Step 2: the crawler config change
 
-In the Algolia Crawler editor for the StarRocks docs crawler:
+In the Algolia Crawler editor for the StarRocks docs crawler, list **both**:
 
 ```js
 new Crawler({
   // ...
-  sitemaps: ["https://docs.starrocks.io/sitemap-algolia.xml"],   // was .../sitemap.xml
+  sitemaps: [
+    "https://docs.starrocks.io/sitemap.xml",
+    "https://docs.starrocks.io/sitemap-algolia.xml",
+  ],
   // ...
 });
 ```
+
+Listing both — rather than swapping one for the other — is what makes the
+rollout order stop mattering, because the union is always the complete set:
+
+| | `/sitemap.xml` | `/sitemap-algolia.xml` | union |
+| --- | --- | --- | --- |
+| Before step 1 deploys | all versions | 404 | all versions |
+| After step 1 | all versions | all versions | all versions |
+| After step 3 | current only | all versions | all versions |
+
+There is no window where the crawler can lose archived versions, so step 3 can
+land whenever it's convenient. Swapping to the Algolia URL alone works too, but
+only *after* step 1 is deployed — before that it points at a 404.
+
+Keeping both permanently is fine and is the recommended end state.
 
 Staging has its own copy at `https://docs-stage.starrocks.io/sitemap-algolia.xml`
 if a separate staging crawler exists.
