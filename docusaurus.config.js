@@ -147,43 +147,44 @@ const config = {
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
         },
-        // Order the sitemap: substantive current-version content, then
-        // navigation stubs, then archived versions.
+        // THE PUBLIC SITEMAP: current version only, real content first.
         //
-        // Docusaurus emits archived versions FIRST, and with seven versions live
-        // they are ~84% of the sitemap — ~5,800 URLs ahead of the first
-        // current-version page. That ordering breaks agent-readiness checkers:
-        // they probe content negotiation by sampling from the HEAD of the
-        // sitemap, not uniformly at random. Archived pages deliberately have no
-        // Markdown twin (the llms-txt plugin runs with includeVersionedDocs:
-        // false, so the CloudFront Function passes them through as HTML), so
-        // every sampled page returned HTML and afdocs.dev reported "Server
-        // ignores Accept: text/markdown (0/50 sampled pages return markdown)"
-        // while negotiation was in fact working on all current docs.
+        // This is the file robots.txt advertises and search engines consume.
+        // Algolia DocSearch reads /sitemap-algolia.xml instead — see the second
+        // plugin-sitemap instance in `plugins` below for why they are separate.
         //
-        // This REORDERS rather than trims. Archived versions must stay IN the
-        // sitemap: it is Algolia DocSearch's ground truth, search is supported
-        // for every version, and static/robots.txt carries an explicit
-        // `User-Agent: Algolia Crawler / Allow: /` exemption so the crawler can
-        // reach the trees other user-agents are Disallow'ed from. Dropping them
-        // would silently break search for 3.1–4.0. Sitemap order carries no
-        // meaning to search engines, so listing the canonical, substantive pages
-        // first costs nothing.
+        // ignorePatterns — drop the archived version trees.
+        // static/robots.txt already Disallows /docs/4.*/, /docs/3.*/ and
+        // /docs/2.5/ for every user-agent, so listing those same ~5,800 URLs here
+        // told crawlers "index these" and "don't fetch these" at once. That is
+        // what produces "Indexed, though blocked by robots.txt" in Search
+        // Console. They were only ever in this file because Algolia needed them,
+        // and Algolia now has its own.
         //
-        // The middle tier matters as much as the last one: ~90 auto-generated
-        // /docs/category/** DocCardList stubs sort alphabetically into the front
-        // of the current-version block. They carry no unique content — which is
-        // exactly why agentDocsRoutes excludes them from Markdown generation — so
-        // leaving them there would put a ~90-URL twin-less run near the head and
-        // reintroduce the same sampling problem a few hundred entries in.
+        // createSitemapItems — sort navigation stubs after real content.
+        // Still needed after the trim. ~90 auto-generated /docs/category/**
+        // DocCardList stubs sort alphabetically into the front of the remaining
+        // block; without this the head of the sitemap is ~59% twin-less. That
+        // matters because agent-readiness checkers (afdocs.dev) probe content
+        // negotiation by sampling from the HEAD of the sitemap, not uniformly at
+        // random — which is how "Server ignores Accept: text/markdown (0/50
+        // sampled pages return markdown)" was reported while negotiation was in
+        // fact working on every current doc page.
+        //
+        // The archived tier below is now unreachable via this instance
+        // (ignorePatterns filters those routes out first). It is kept because the
+        // same tier function documents the full ordering intent, and because a
+        // version roll that forgets to update `lastVersion` would otherwise let
+        // the previous latest through unsorted.
         //
         // hasMarkdownTwin() is the repo's single source of truth for "this route
         // has real content", so the tiers derive from it rather than from a
         // second hand-maintained list.
         //
-        // scripts/check-sitemap-markdown-coverage.js fails the build if this
-        // regresses.
+        // scripts/check-sitemap-markdown-coverage.js fails the build if any of
+        // this regresses.
         sitemap: {
+          ignorePatterns: archivedVersions.map((v) => `/docs/${v}/**`),
           createSitemapItems: async ({defaultCreateSitemapItems, ...rest}) => {
             const items = await defaultCreateSitemapItems(rest);
             const archivedPrefixes = archivedVersions.map((v) => `/docs/${v}/`);
@@ -232,16 +233,11 @@ const config = {
     // config takes an explicit `sitemaps: [...]` list, so it can be pointed at a
     // file of its own that robots.txt never mentions.
     //
-    // This instance emits the complete set (no ignorePatterns, no reordering).
-    // The preset's default instance owns /sitemap.xml.
-    //
-    // ROLLOUT — this file is additive and changes nothing yet. /sitemap.xml is
-    // still the all-versions list, so search keeps working no matter what.
-    // Trimming /sitemap.xml to the current version is a SEPARATE, LATER commit,
-    // and must not land until the Algolia crawler config has been repointed at
-    // /sitemap-algolia.xml and a recrawl confirmed to still cover archived
-    // versions. Trimming first would silently drop 3.1–4.0 out of search.
-    // See cloudfront/README.md for the same hazard on the CDN side.
+    // This instance emits the complete set — every version. It must NEVER get
+    // ignorePatterns: it is the only remaining file that lists the archived doc
+    // trees, so filtering it would silently drop 3.1–4.0 out of search.
+    // scripts/check-sitemap-markdown-coverage.js asserts it stays a superset of
+    // the public sitemap and still contains archived-version URLs.
     [
       '@docusaurus/plugin-sitemap',
       {

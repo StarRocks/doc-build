@@ -14,12 +14,16 @@
 // Accept: text/markdown (0/50 sampled pages return markdown)" even though
 // negotiation was working perfectly on the current docs.
 //
-// docusaurus.config.js fixes that with `sitemap.createSitemapItems`, which sorts
-// entries into three tiers: real current-version content, then navigation stubs
-// (/docs/category/**, section indexes, /search/), then archived versions. Note it
-// REORDERS rather than trims: archived versions must stay in the sitemap because
-// it is Algolia DocSearch's ground truth and search is supported for every
-// version (see the `Algolia Crawler` exemption in static/robots.txt).
+// docusaurus.config.js fixes that two ways: `sitemap.ignorePatterns` drops the
+// archived trees from the public sitemap entirely (they are Disallow'ed in
+// robots.txt anyway), and `sitemap.createSitemapItems` sorts what remains so real
+// content precedes the ~90 auto-generated /docs/category/** navigation stubs,
+// which would otherwise cluster alphabetically near the head.
+//
+// Archived versions are NOT lost — they move to /sitemap-algolia.xml, which is
+// what the Algolia DocSearch crawler reads (search is supported for every
+// version). This script asserts that file stays complete, which is the safety
+// net for the whole arrangement. See SITEMAPS.md.
 //
 // This script replays what a sampler sees: take the first N URLs and count how
 // many have a Markdown twin according to src/agentDocsRoutes.js — the same source
@@ -80,21 +84,23 @@ const algoliaPathnames = readSitemapPathnames(algoliaSitemapPath, 'sitemap-algol
 const ARCHIVED = /^\/docs\/[0-9]+\.[0-9]+\//;
 const sample = pathnames.slice(0, SAMPLE_SIZE);
 
-// 1. No archived-version URL may appear in the head of the sitemap. They belong
-//    in the sitemap (Algolia crawls them) but must sort to the end.
-const archivedInHead = sample.filter((p) => ARCHIVED.test(p));
-if (archivedInHead.length) {
-  const prefixes = [...new Set(archivedInHead.map((p) => p.match(ARCHIVED)[0]))];
+// 1. The public sitemap must contain NO archived-version URLs at all. They are
+//    Disallow'ed for every user-agent in static/robots.txt, and they live in
+//    sitemap-algolia.xml instead (asserted below).
+const archivedInPublic = pathnames.filter((p) => ARCHIVED.test(p));
+if (archivedInPublic.length) {
+  const prefixes = [...new Set(archivedInPublic.map((p) => p.match(ARCHIVED)[0]))];
   console.error(
-    `\n✖ Sitemap coverage: ${archivedInHead.length} archived-version URL(s) in the ` +
-      `first ${SAMPLE_SIZE} sitemap entries.\n\n` +
+    `\n✖ Sitemap coverage: ${archivedInPublic.length} archived-version URL(s) in ` +
+      `sitemap.xml.\n\n` +
       `Prefixes found:\n` +
       prefixes.map((p) => `    ${p}`).join('\n') +
-      `\n\nArchived versions have no Markdown twin, so a checker sampling the head of\n` +
-      `the sitemap will report that the server ignores \`Accept: text/markdown\`.\n` +
-      `They should sort to the END via \`sitemap.createSitemapItems\` in\n` +
-      `docusaurus.config.js — check that a version roll updated \`lastVersion\`.\n` +
-      `Do NOT delete them: Algolia DocSearch crawls the sitemap for every version.\n`,
+      `\n\nThese are Disallow'ed in static/robots.txt, so advertising them here is\n` +
+      `contradictory — and they have no Markdown twin, so a checker sampling the\n` +
+      `head of the sitemap reports that the server ignores \`Accept: text/markdown\`.\n\n` +
+      `\`sitemap.ignorePatterns\` in docusaurus.config.js derives from \`archivedVersions\`;\n` +
+      `check that a version roll updated \`lastVersion\`. Do NOT remove them from\n` +
+      `sitemap-algolia.xml — that is the only file Algolia DocSearch has for them.\n`,
   );
   process.exit(1);
 }

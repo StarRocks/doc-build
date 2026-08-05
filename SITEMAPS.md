@@ -36,10 +36,11 @@ working. See `scripts/check-sitemap-markdown-coverage.js`.
       lists every version, so search cannot break regardless of crawler config.
 - [x] **Step 2 — repoint the Algolia crawler** (manual, in the hosted Algolia
       Crawler admin — not a file in this repo). Done 2026-08-05.
-- [ ] **Step 3 — trim `/sitemap.xml` to the current version.** Safe to land once
-      step 1 is deployed *and* the crawler lists both sitemaps (see below). If
-      the crawler lists only `/sitemap-algolia.xml`, verify a recrawl still
-      returns archived-version records first.
+- [x] **Step 3 — trim `/sitemap.xml` to the current version.** Done 2026-08-05,
+      after step 1 was deployed to prod and `/sitemap-algolia.xml` verified live
+      with all 6,932 URLs including 5,796 archived.
+
+Rollout complete. The guard below now enforces the end state.
 
 ### Step 2: the crawler config change
 
@@ -84,31 +85,35 @@ older version still returns a `/docs/3.1/…` or `/docs/4.0/…` URL. If archive
 records vanish, the crawler is not reading the new sitemap; fix that before
 trimming.
 
-### Step 3: the trim
+### Step 3: the trim (done)
 
-Add `ignorePatterns` to the **preset's** sitemap options (the default instance)
-in `docusaurus.config.js`:
+`ignorePatterns` on the **preset's** sitemap options — the default instance, not
+the `algolia` one:
 
 ```js
 sitemap: {
-  ignorePatterns: [...archivedVersions.map((v) => `/docs/${v}/**`)],
-  createSitemapItems: /* unchanged — still sorts nav stubs last */,
+  ignorePatterns: archivedVersions.map((v) => `/docs/${v}/**`),
+  createSitemapItems: /* kept — still sorts nav stubs last */,
 },
 ```
 
-Leave `createSitemapItems` in place. Trimming removes the archived tier, but the
-~90 auto-generated `/docs/category/**` stubs still cluster alphabetically near
-the front of the current-version block, and without the sort the head of the
-sitemap goes back to ~59% twin-less.
+`createSitemapItems` stays. Trimming empties the archived tier, but the ~90
+auto-generated `/docs/category/**` stubs still cluster alphabetically near the
+front of what remains; without the sort the head of the sitemap goes back to
+~59% twin-less.
 
-Do **not** add `ignorePatterns` to the `algolia` instance.
+The `algolia` instance must never get `ignorePatterns` — it is now the only file
+that lists the archived trees.
+
+Resulting sizes: `/sitemap.xml` 1,136 URLs (1,040 with a Markdown twin, 96
+navigation stubs), `/sitemap-algolia.xml` 6,932.
 
 ## Guard
 
 `scripts/check-sitemap-markdown-coverage.js` runs after every build (`build.sh`
 and both deploy workflows) and fails if:
 
-- archived-version URLs appear in the first 100 entries of `/sitemap.xml`;
+- any archived-version URL appears in `/sitemap.xml`;
 - fewer than 90% of those first 100 have a Markdown twin;
 - `/sitemap-algolia.xml` is missing, or is not a superset of `/sitemap.xml`;
 - `/sitemap-algolia.xml` contains no archived-version URLs.
