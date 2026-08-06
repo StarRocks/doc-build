@@ -6,6 +6,7 @@
 
 import {themes as prismThemes} from 'prism-react-renderer';
 import versions from './versions.json';
+import agentDocsRoutes from './src/agentDocsRoutes.js';
 
 // Used to limit build to just two versions for debugging
 const isBuildFast = !!process.env.BUILD_FAST;
@@ -21,6 +22,27 @@ const isBuildFast = !!process.env.BUILD_FAST;
 // 
 const isVersioningDisabled = !!process.env.DISABLE_VERSIONING || false;
 const isDefaultLocale = (process.env.DOCUSAURUS_CURRENT_LOCALE ?? 'en') === 'en';
+
+// Which doc versions this build ships, and which one is "latest".
+// Hoisted out of the preset so the sitemap config below can derive the archived
+// version prefixes from the same source rather than repeating the list.
+//
+// lastVersion is served unprefixed at /docs/...; every other included version is
+// served at /docs/<version>/... .
+const lastVersion = isVersioningDisabled ? 'current' : '4.1';
+
+const includedVersions = (() => {
+  if (isVersioningDisabled) {
+    return ['current'];
+  }
+  if (isBuildFast) {
+    return [...versions.slice(0, 2)];
+  }
+  return ['4.1', '4.0', '3.5', '3.4', '3.3', '3.2', '3.1'];
+})();
+
+// Archived (non-latest) versions, i.e. the ones that get a /docs/<version>/ prefix.
+const archivedVersions = includedVersions.filter((v) => v !== lastVersion);
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -101,24 +123,10 @@ const config = {
           // but we support multiple versions, so the banner is set
           // to none on the versions other than latest (latest
           // doesn't get a banner by default).
-          lastVersion: (() => {
-            if (isVersioningDisabled) {
-              return 'current';
-            } else {
-              return '4.1';
-            }
-          })(),
+          lastVersion,
 
           //onlyIncludeVersions: ['4.1', '4.0', '3.5', '3.4', '3.3', 3.2', '3.1'],
-          onlyIncludeVersions: (() => {
-            if (isVersioningDisabled) {
-              return ['current'];
-            } else if (isBuildFast){
-              return [...versions.slice(0, 2)];
-            } else {
-              return ['4.1', '4.0', '3.5', '3.4', '3.3', '3.2', '3.1'];
-            }
-          })(),
+          onlyIncludeVersions: includedVersions,
 
           versions: (() => {
             if (isVersioningDisabled) {
@@ -138,6 +146,59 @@ const config = {
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
+        },
+        // THE PUBLIC SITEMAP: current version only, real content first.
+        //
+        // This is the file robots.txt advertises and search engines consume.
+        // Algolia DocSearch reads /sitemap-algolia.xml instead — see the second
+        // plugin-sitemap instance in `plugins` below for why they are separate.
+        //
+        // ignorePatterns — drop the archived version trees.
+        // static/robots.txt already Disallows /docs/4.*/, /docs/3.*/ and
+        // /docs/2.5/ for every user-agent, so listing those same ~5,800 URLs here
+        // told crawlers "index these" and "don't fetch these" at once. That is
+        // what produces "Indexed, though blocked by robots.txt" in Search
+        // Console. They were only ever in this file because Algolia needed them,
+        // and Algolia now has its own.
+        //
+        // createSitemapItems — sort navigation stubs after real content.
+        // Still needed after the trim. ~90 auto-generated /docs/category/**
+        // DocCardList stubs sort alphabetically into the front of the remaining
+        // block; without this the head of the sitemap is ~59% twin-less. That
+        // matters because agent-readiness checkers (afdocs.dev) probe content
+        // negotiation by sampling from the HEAD of the sitemap, not uniformly at
+        // random — which is how "Server ignores Accept: text/markdown (0/50
+        // sampled pages return markdown)" was reported while negotiation was in
+        // fact working on every current doc page.
+        //
+        // The archived tier below is now unreachable via this instance
+        // (ignorePatterns filters those routes out first). It is kept because the
+        // same tier function documents the full ordering intent, and because a
+        // version roll that forgets to update `lastVersion` would otherwise let
+        // the previous latest through unsorted.
+        //
+        // hasMarkdownTwin() is the repo's single source of truth for "this route
+        // has real content", so the tiers derive from it rather than from a
+        // second hand-maintained list.
+        //
+        // scripts/check-sitemap-markdown-coverage.js fails the build if any of
+        // this regresses.
+        sitemap: {
+          ignorePatterns: archivedVersions.map((v) => `/docs/${v}/**`),
+          createSitemapItems: async ({defaultCreateSitemapItems, ...rest}) => {
+            const items = await defaultCreateSitemapItems(rest);
+            const archivedPrefixes = archivedVersions.map((v) => `/docs/${v}/`);
+            const tierOf = (item) => {
+              const {pathname} = new URL(item.url);
+              // 2: archived versions (/docs/4.0/..., /docs/3.5/..., ...)
+              if (archivedPrefixes.some((p) => pathname.startsWith(p))) return 2;
+              // 0: current-version pages with real content; 1: navigation stubs
+              // (/docs/category/**, /docs/cover_pages/**, section indexes, /search/)
+              return agentDocsRoutes.hasMarkdownTwin(pathname) ? 0 : 1;
+            };
+            // Stable partition: relative order within each tier is preserved.
+            return [0, 1, 2].flatMap((tier) => items.filter((i) => tierOf(i) === tier));
+          },
         },
         gtag: {
           trackingID: 'G-VTBXVPZLHB',
@@ -159,6 +220,31 @@ const config = {
     // Agent-Friendly Docs: HTML/markdown llms.txt directives + llms.txt splitting.
     // Only for the default (en) locale — markdown files and llms.txt only exist there.
     ...(isDefaultLocale ? ['./src/plugins/agent-friendly-docs.js'] : []),
+    // Second sitemap, for Algolia DocSearch only.
+    // -------------------------------------------------------------------------
+    // /sitemap.xml is the PUBLIC sitemap: what robots.txt advertises and what
+    // search engines and agent-readiness checkers consume. It should describe the
+    // canonical surface — the current version — and nothing that robots.txt turns
+    // around and Disallows.
+    //
+    // Algolia needs the opposite: search is supported for EVERY version, so its
+    // crawler needs all ~6,900 URLs. Those two audiences were in conflict only
+    // because they shared one file. They don't have to: the Algolia crawler
+    // config takes an explicit `sitemaps: [...]` list, so it can be pointed at a
+    // file of its own that robots.txt never mentions.
+    //
+    // This instance emits the complete set — every version. It must NEVER get
+    // ignorePatterns: it is the only remaining file that lists the archived doc
+    // trees, so filtering it would silently drop 3.1–4.0 out of search.
+    // scripts/check-sitemap-markdown-coverage.js asserts it stays a superset of
+    // the public sitemap and still contains archived-version URLs.
+    [
+      '@docusaurus/plugin-sitemap',
+      {
+        id: 'algolia',
+        filename: 'sitemap-algolia.xml',
+      },
+    ],
     [
       "@docusaurus/plugin-content-docs",
       {
@@ -199,32 +285,8 @@ const config = {
           includePages: false,
           includeDocs: true,
           includeVersionedDocs: false,
-          excludeRoutes: [
-            // Pure navigation pages — no content for LLMs
-            '/docs/cover_pages/**',
-            '/docs/category/**',
-            // DocCardList-only section index pages (navigation, no content)
-            // Add new ones here as the nav structure evolves
-            '/docs/administration/',
-            '/docs/administration/management/',
-            '/docs/administration/management/configuration/',
-            '/docs/benchmarking/',
-            '/docs/data_source/catalog/catalog_intro/',
-            '/docs/faq/',
-            '/docs/integrations/',
-            '/docs/integrations/streaming/',
-            '/docs/integrations/streaming/apache_kafka/',
-            '/docs/introduction/',
-            '/docs/loading/',
-            '/docs/loading/loading_introduction/loading_overview/',
-            '/docs/loading/objectstorage/',
-            '/docs/project_help/',
-            '/docs/sql-reference/data-types/',
-            '/docs/sql-reference/data-types/date-types/',
-            '/docs/sql-reference/sql-functions/',
-            '/docs/sql-reference/sql-functions/date-time-functions/',
-            '/docs/unloading/',
-          ],
+          // Single source of truth: src/agentDocsRoutes.js
+          excludeRoutes: agentDocsRoutes.EXCLUDE_ROUTE_PATTERNS,
         },
         llmsTxt: {
           enableLlmsFullTxt: true,
@@ -232,32 +294,7 @@ const config = {
           includePages: false,
           includeDocs: true,
           includeVersionedDocs: false,
-          excludeRoutes: [
-            // Pure navigation pages — no content for LLMs
-            '/docs/cover_pages/**',
-            '/docs/category/**',
-            // DocCardList-only section index pages (navigation, no content)
-            // Add new ones here as the nav structure evolves
-            '/docs/administration/',
-            '/docs/administration/management/',
-            '/docs/administration/management/configuration/',
-            '/docs/benchmarking/',
-            '/docs/data_source/catalog/catalog_intro/',
-            '/docs/faq/',
-            '/docs/integrations/',
-            '/docs/integrations/streaming/',
-            '/docs/integrations/streaming/apache_kafka/',
-            '/docs/introduction/',
-            '/docs/loading/',
-            '/docs/loading/loading_introduction/loading_overview/',
-            '/docs/loading/objectstorage/',
-            '/docs/project_help/',
-            '/docs/sql-reference/data-types/',
-            '/docs/sql-reference/data-types/date-types/',
-            '/docs/sql-reference/sql-functions/',
-            '/docs/sql-reference/sql-functions/date-time-functions/',
-            '/docs/unloading/',
-          ],
+          excludeRoutes: agentDocsRoutes.EXCLUDE_ROUTE_PATTERNS,
           autoSectionDepth: 2,
 
           // Site metadata

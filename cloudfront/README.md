@@ -148,5 +148,56 @@ curl -sI https://docs.starrocks.io/docs/this-page-does-not-exist/ | head -1
 # Expect: HTTP/2 404
 ```
 
+### The check that actually matters — excluded routes must stay HTML
+
+**Do not skip this one.** The first curl above passes even when the function's
+`EXCLUDED` map is missing entirely, because it only proves that rewriting
+happens. What it cannot show is whether rewriting is being *withheld* where it
+should be — and that is the half that silently broke in production: every
+section index page returned 404 to any client sending `Accept: text/markdown`,
+while plain browsers saw nothing wrong.
+
+Section index pages have no `.md` twin (see `src/agentDocsRoutes.js`), so the
+function must pass them through as HTML:
+
+```bash
+# Excluded index page: must be 200 + text/html, NOT 404
+curl -sI -H 'Accept: text/markdown' https://docs.starrocks.io/docs/loading/ \
+  | grep -iE '^HTTP|content-type'
+# Expect: HTTP/2 200  and  content-type: text/html
+# A 404 here means EXCLUDED did not make it into the published function.
+```
+
+Sweep all of them at once — any line marked BROKEN means the deployed function
+is out of sync with `viewer-request-markdown.js`:
+
+```bash
+for r in administration/ benchmarking/ faq/ integrations/ introduction/ \
+         loading/ unloading/ project_help/ sql-reference/sql-functions/ \
+         sql-reference/data-types/ sql-reference/sql-functions/date-time-functions/ \
+         loading/objectstorage/ data_source/catalog/catalog_intro/; do
+  md=$(curl -s -o /dev/null -w '%{http_code}' -H 'Accept: text/markdown' \
+       "https://docs.starrocks.io/docs/$r")
+  plain=$(curl -s -o /dev/null -w '%{http_code}' "https://docs.starrocks.io/docs/$r")
+  printf '%-44s plain:%s markdown:%s%s\n' "$r" "$plain" "$md" \
+    "$([ "$md" = 404 ] && [ "$plain" = 200 ] && echo '   <-- BROKEN')"
+done
+```
+
+Also confirm the version guard still holds, since it is the other way a bad
+publish shows up:
+
+```bash
+# Older version has no .md twin: must stay HTML
+curl -sI -H 'Accept: text/markdown' https://docs.starrocks.io/docs/4.0/quick_start/ \
+  | grep -iE '^HTTP|content-type'
+# Expect: HTTP/2 200  and  content-type: text/html
+```
+
+`scripts/check-cloudfront-excludes.js` keeps `viewer-request-markdown.js` in
+sync with `src/agentDocsRoutes.js` at build time, but nothing in the repo can
+see what is actually published to CloudFront. These curls are the only check
+that closes that gap, so run them after **every** publish.
+
 Re-run the afdocs scorecard to confirm `content-negotiation` and
 `http-status-codes` now pass.

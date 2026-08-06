@@ -56,6 +56,12 @@ jobs:
           yarn install --frozen-lockfile
       
       - run: npm run copy
+
+      # Fails fast if the CloudFront Function's route exclusions have drifted
+      # from src/agentDocsRoutes.js — see the script header for why it matters.
+      - name: Check CloudFront markdown exclusions are in sync
+        run: node scripts/check-cloudfront-excludes.js
+
       - name: Build website
         run:  |
           export NODE_OPTIONS="--max_old_space_size=12288"
@@ -66,6 +72,11 @@ jobs:
 
       - name: Post-process llms.txt and markdown for agents
         run: node scripts/llms-postprocess.js build
+
+      # Archived versions flooding the head of the sitemap makes agent checkers
+      # sampling it conclude Accept: text/markdown is ignored — see the script header.
+      - name: Check sitemap markdown coverage
+        run: node scripts/check-sitemap-markdown-coverage.js build
 
       - name: sync to S3
         env:

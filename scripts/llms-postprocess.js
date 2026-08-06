@@ -68,6 +68,15 @@ function main() {
     `[llms-postprocess] Prepended markdown directive to ${mdCount} .md files.`,
   );
 
+  const fullTxtCleaned = cleanLlmsFullTxt(buildDir);
+  if (fullTxtCleaned === null) {
+    console.log('[llms-postprocess] No llms-full.txt found; skipped cleanup.');
+  } else {
+    console.log(
+      `[llms-postprocess] Removed ${fullTxtCleaned} empty HTML comment(s) from llms-full.txt.`,
+    );
+  }
+
   const robotsFixed = fixRobotsSitemap(buildDir);
   if (robotsFixed) {
     console.log(`[llms-postprocess] robots.txt Sitemap: -> ${SITEMAP_URL}`);
@@ -96,7 +105,8 @@ function addMarkdownDirective(buildDir) {
     const content = fs.readFileSync(file, 'utf8');
     // Idempotent: skip if the directive is already present near the top.
     if (content.startsWith('> For the complete documentation index')) continue;
-    fs.writeFileSync(file, `${MD_DIRECTIVE}\n\n${unescapeIntrawordUnderscores(content)}`, 'utf8');
+    const cleaned = stripEmptyHtmlComments(unescapeIntrawordUnderscores(content));
+    fs.writeFileSync(file, `${MD_DIRECTIVE}\n\n${cleaned}`, 'utf8');
     count++;
   }
   return count;
@@ -116,6 +126,104 @@ function unescapeIntrawordUnderscores(md) {
   // this targets identifiers like foo_bar_baz and avoids touching escaped
   // emphasis runs such as \_\_bold\_\_.
   return md.replace(/(?<=[A-Za-z0-9])\\_(?=[A-Za-z0-9])/g, '_');
+}
+
+// React emits `<!-- -->` separators between adjacent text nodes in its SSR
+// output. The llms-txt plugin derives Markdown from the rendered HTML, so those
+// empty comments survive into the .md — heavily on pages using DocCardList,
+// where they land *inside* link labels:
+//
+//   ## [📄️<!-- --> <!-- -->Deploy StarRocks with Docker](.../shared-nothing.md)
+//
+// They are pure serialization noise: invisible in rendered Markdown, but agents
+// reading the raw file see them, and they corrupt link text. As of this writing
+// they affected 693 of 1051 generated pages.
+//
+// Only EMPTY comments are removed. Authored comments carry real content — the
+// docs include XML/pom snippets with comments like `<!-- Extension jar -->` —
+// so the pattern requires the comment body to be whitespace-only.
+//
+// Fenced code blocks are skipped entirely: an empty comment inside a fence is
+// example code a reader is meant to see, not a serialization artifact.
+function stripEmptyHtmlComments(md) {
+  const EMPTY_COMMENT_RUN = /(?:<!--\s*-->\s*)+/g;
+  const lines = md.split('\n');
+  const out = [];
+  let inFence = false;
+  let fenceMarker = null;
+  let fenceLength = 0;
+  let swallowNextBlank = false;
+
+  for (const line of lines) {
+    const fence = line.match(/^\s*(`{3,}|~{3,})/);
+    if (fence) {
+      if (!inFence) {
+        inFence = true;
+        fenceMarker = fence[1][0];
+        fenceLength = fence[1].length;
+      } else if (fence[1][0] === fenceMarker && fence[1].length >= fenceLength) {
+        // CommonMark: a closing fence must use the same character and be at
+        // least as long as the opening one. Without the length test, a ```
+        // line nested inside a ```` block would close it early and stripping
+        // would resume inside what is still code.
+        inFence = false;
+        fenceMarker = null;
+        fenceLength = 0;
+      }
+      out.push(line);
+      continue;
+    }
+    if (inFence) {
+      out.push(line);
+      continue;
+    }
+
+    // A line that is nothing but empty comments is dropped outright. It is
+    // normally surrounded by blank lines (it was a "paragraph"), so also
+    // swallow the following blank to avoid leaving a double gap behind.
+    if (/^\s*(?:<!--\s*-->\s*)+$/.test(line)) {
+      swallowNextBlank = out.length > 0 && out[out.length - 1].trim() === '';
+      continue;
+    }
+    if (swallowNextBlank) {
+      swallowNextBlank = false;
+      if (line.trim() === '') {
+        continue;
+      }
+    }
+
+    // Mid-line: a run that was separating two pieces of text collapses to a
+    // single space, so `[📄️<!-- --> <!-- -->Title]` becomes `[📄️ Title]`;
+    // a run with no whitespace in it (`a<!-- -->b`) collapses to nothing.
+    out.push(
+      line
+        .replace(EMPTY_COMMENT_RUN, (match) =>
+          match.replace(/<!--\s*-->/g, '').length > 0 ? ' ' : '',
+        )
+        .replace(/[ \t]+$/, ''),
+    );
+  }
+
+  return out.join('\n');
+}
+
+// llms-full.txt is the concatenation of every page, produced by the same
+// HTML-derived pipeline as the .md twins, so it carries the same React SSR
+// comment artifacts. It is the file bulk/RAG consumers ingest, so the noise is
+// worth removing there too. Returns the number of artifacts removed, or null
+// if the file does not exist.
+function cleanLlmsFullTxt(buildDir) {
+  const file = path.join(buildDir, 'llms-full.txt');
+  if (!fs.existsSync(file)) return null;
+
+  const before = fs.readFileSync(file, 'utf8');
+  const after = stripEmptyHtmlComments(before);
+  if (after === before) return 0;
+
+  const removed = (before.match(/<!--\s*-->/g) || []).length -
+    (after.match(/<!--\s*-->/g) || []).length;
+  fs.writeFileSync(file, after, 'utf8');
+  return removed;
 }
 
 // -----------------------------------------------------------------------------
