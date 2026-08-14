@@ -3,11 +3,79 @@ import Heading from '@theme/Heading';
 import styles from './styles.module.css';
 import React from 'react';
 import Link from '@docusaurus/Link';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+import {useDocsVersion} from '@docusaurus/plugin-content-docs/client';
+
+// The feature cards on StarRocks_intro point at the same eleven destinations in
+// every language, so the URLs live here once and the per-language lists below
+// carry only the text. They used to be repeated in all three lists, which is how
+// four of them silently rotted: the targets were restructured upstream and only
+// the daily full build noticed.
+//
+// Paths are relative to a version's docs root (no leading slash) and are turned
+// into absolute URLs by useFeatureUrl() below. Do NOT write them as `../../foo/`
+// — a relative URL resolves against the *page* URL, and StarRocks_intro sits at a
+// different depth depending on the version (`introduction/StarRocks_intro` in
+// 3.1-3.4, the version root in 3.5+) and on whether the version is the unprefixed
+// latest one. That is what made 3.5 and 4.0 link into the 4.1 docs.
+// Several of these resolve to a bare directory because the doc inside is a
+// Docusaurus "category index": a file named index.*, readme.*, or after its own
+// parent directory (plugin-content-docs/lib/docs.js, isCategoryIndex) takes the
+// directory's slug rather than its own. That is why the target is
+// `loading/loading_introduction/` and not
+// `loading/loading_introduction/loading_introduction/`.
+const DOC_PATHS = {
+  introduction: 'introduction/',
+  quickStart: 'quick_start/',
+  loading: 'loading/loading_introduction/',
+  tableDesign: 'table_design/StarRocks_table_design/',
+  dataLakes: 'integrations/data_lakes/',
+  semiStructured: 'sql-reference/data-types/semi_structured/',
+  integrations: 'integrations/',
+  administration: 'administration/',
+  reference: 'sql-reference/',
+  faq: 'faq/',
+  benchmarking: 'benchmarking/',
+};
+
+// 3.4 and older predate the upstream docs restructure. There, data loading and
+// the data lake page still live under their old names, and "Semi-structured" and
+// "Reference" are `link: {type: generated-index}` categories rather than real
+// docs, so they are served from /category/. Those categories are gone from 3.5
+// onward (0 generated-index categories remain), replaced by index docs.
+const LEGACY_DOC_PATHS = {
+  ...DOC_PATHS,
+  loading: 'loading/Loading_intro/',
+  dataLakes: 'data_source/data_lakes/',
+  semiStructured: 'category/semi-structured/',
+  reference: 'category/reference/',
+};
+
+// Versions before 3.5 use the pre-restructure layout. Anything unparseable
+// (`current`, used when DISABLE_VERSIONING is set) tracks main, which is current.
+function usesLegacyPaths(version) {
+  const match = /^(\d+)\.(\d+)$/.exec(version);
+  if (!match) {
+    return false;
+  }
+  const [, major, minor] = match;
+  return Number(major) * 100 + Number(minor) < 305;
+}
+
+// Resolve a DOC_PATHS key to an absolute URL for the version being rendered.
+// The latest version is served unprefixed at /docs/, every other version at
+// /docs/<version>/. useBaseUrl prepends the locale baseUrl, so this stays correct
+// for the zh (/zh/) and ja (/ja/) builds.
+function useFeatureUrl(slot) {
+  const {version, isLast} = useDocsVersion();
+  const paths = usesLegacyPaths(version) ? LEGACY_DOC_PATHS : DOC_PATHS;
+  return useBaseUrl(`/docs/${isLast ? '' : `${version}/`}${paths[slot]}`);
+}
 
 const ChineseFeatureList = [
   {
     title: '产品简介',
-    url: '../../introduction/',
+    slot: 'introduction',
     description: (
       <>
         OLAP、特性、系统架构
@@ -16,7 +84,7 @@ const ChineseFeatureList = [
   },
   {
     title: '快速入门信息',
-    url: '../../quick_start/',
+    slot: 'quickStart',
     description: (
       <>
         快速部署、导入、查询
@@ -25,7 +93,7 @@ const ChineseFeatureList = [
   },
   {
     title: '导入数据',
-    url: '../../loading/Loading_intro/',
+    slot: 'loading',
     description: (
       <>
         数据清洗、转换、导入
@@ -34,7 +102,7 @@ const ChineseFeatureList = [
   },
   {
     title: '表设计',
-    url: '../../table_design/StarRocks_table_design/',
+    slot: 'tableDesign',
     description: (
       <>
         表、索引、分区、加速
@@ -43,7 +111,7 @@ const ChineseFeatureList = [
   },
   {
     title: '查询数据湖',
-    url: '../../data_source/data_lakes/',
+    slot: 'dataLakes',
     description: (
       <>
         Iceberg, Hive, Delta Lake, …
@@ -52,7 +120,7 @@ const ChineseFeatureList = [
   },
   {
     title: '半结构化类型',
-    url: '../../category/semi-structured/',
+    slot: 'semiStructured',
     description: (
       <>
         JSON, map, struct, array
@@ -61,7 +129,7 @@ const ChineseFeatureList = [
   },
   {
     title: '外部系统集成',
-    url: '../../integrations/',
+    slot: 'integrations',
     description: (
       <>
         BI、IDE、认证信息
@@ -70,7 +138,7 @@ const ChineseFeatureList = [
   },
   {
     title: '管理手册',
-    url: '../../administration/',
+    slot: 'administration',
     description: (
       <>
         扩缩容、备份恢复、权限、性能调优
@@ -79,7 +147,7 @@ const ChineseFeatureList = [
   },
   {
     title: '参考手册',
-    url: '../../category/reference/',
+    slot: 'reference',
     description: (
       <>
         SQL 语法、命令、函数、变量
@@ -88,7 +156,7 @@ const ChineseFeatureList = [
   },
   {
     title: '常见问题解答',
-    url: '../../faq/',
+    slot: 'faq',
     description: (
       <>
         部署、导入、查询、权限常见问题
@@ -97,7 +165,7 @@ const ChineseFeatureList = [
   },
   {
     title: '性能测试',
-    url: '../../benchmarking/',
+    slot: 'benchmarking',
     description: (
       <>
         性能测试：数据库性能对比
@@ -109,7 +177,7 @@ const ChineseFeatureList = [
 const EnglishFeatureList = [
   {
     title: 'Introduction',
-    url: '../../introduction/',
+    slot: 'introduction',
     description: (
       <>
         OLAP, features, architecture
@@ -118,7 +186,7 @@ const EnglishFeatureList = [
   },
   {
     title: 'Quick Start',
-    url: '../../quick_start/',
+    slot: 'quickStart',
     description: (
       <>
         Get up and running quickly.
@@ -127,7 +195,7 @@ const EnglishFeatureList = [
   },
   {
     title: 'Data Loading',
-    url: '../../loading/Loading_intro/',
+    slot: 'loading',
     description: (
       <>
         Clean, transform, and load
@@ -136,7 +204,7 @@ const EnglishFeatureList = [
   },
   {
     title: 'Table Design',
-    url: '../../table_design/StarRocks_table_design/',
+    slot: 'tableDesign',
     description: (
       <>
         Tables, indexing, acceleration
@@ -145,7 +213,7 @@ const EnglishFeatureList = [
   },
   {
     title: 'Data Lakes',
-    url: '../../data_source/data_lakes/',
+    slot: 'dataLakes',
     description: (
       <>
         Iceberg, Hive, Delta Lake, …
@@ -154,7 +222,7 @@ const EnglishFeatureList = [
   },
   {
     title: 'Work with semi-structured data',
-    url: '../../category/semi-structured/',
+    slot: 'semiStructured',
     description: (
       <>
         JSON, map, struct, array
@@ -163,7 +231,7 @@ const EnglishFeatureList = [
   },
   {
     title: 'Integrations',
-    url: '../../integrations/',
+    slot: 'integrations',
     description: (
       <>
         BI tools, IDEs, Cloud authentication, …
@@ -172,7 +240,7 @@ const EnglishFeatureList = [
   },
   {
     title: 'Administration',
-    url: '../../administration/',
+    slot: 'administration',
     description: (
       <>
         Scale, backups, roles and privileges, …
@@ -181,7 +249,7 @@ const EnglishFeatureList = [
   },
   {
     title: 'Reference',
-    url: '../../category/reference/',
+    slot: 'reference',
     description: (
       <>
         SQL, functions, error codes, …
@@ -190,7 +258,7 @@ const EnglishFeatureList = [
   },
   {
     title: 'FAQs',
-    url: '../../faq/',
+    slot: 'faq',
     description: (
       <>
         Frequently asked questions.
@@ -199,7 +267,7 @@ const EnglishFeatureList = [
   },
   {
     title: 'Benchmarks',
-    url: '../../benchmarking/',
+    slot: 'benchmarking',
     description: (
       <>
         DB performance comparison benchmarks.
@@ -211,7 +279,7 @@ const EnglishFeatureList = [
 const JapaneseFeatureList = [
   {
     title: '紹介',
-    url: '../../introduction/',
+    slot: 'introduction',
     description: (
       <>
         OLAP、機能、アーキテクチャ
@@ -220,7 +288,7 @@ const JapaneseFeatureList = [
   },
   {
     title: 'クイックスタート',
-    url: '../../quick_start/',
+    slot: 'quickStart',
     description: (
       <>
         デプロイ、ロード、クエリ
@@ -229,7 +297,7 @@ const JapaneseFeatureList = [
   },
   {
     title: 'データロード',
-    url: '../../loading/Loading_intro/',
+    slot: 'loading',
     description: (
       <>
         データクレンジング、変換、ロード
@@ -238,7 +306,7 @@ const JapaneseFeatureList = [
   },
   {
     title: 'テーブルデザイン',
-    url: '../../table_design/StarRocks_table_design/',
+    slot: 'tableDesign',
     description: (
       <>
         テーブル、インデックス、パーティション、クエリー加速
@@ -247,7 +315,7 @@ const JapaneseFeatureList = [
   },
   {
     title: 'データレイクをクエリ',
-    url: '../../data_source/data_lakes/',
+    slot: 'dataLakes',
     description: (
       <>
         Iceberg、Hive、Delta Lake …
@@ -256,7 +324,7 @@ const JapaneseFeatureList = [
   },
   {
     title: 'セミ構造化タイプ',
-    url: '../../category/semi-structured/',
+    slot: 'semiStructured',
     description: (
       <>
         JSON、map、struct、array
@@ -265,7 +333,7 @@ const JapaneseFeatureList = [
   },
   {
     title: '外部システム統合',
-    url: '../../integrations/',
+    slot: 'integrations',
     description: (
       <>
         BI、IDE、認証情報
@@ -274,7 +342,7 @@ const JapaneseFeatureList = [
   },
   {
     title: '管理',
-    url: '../../administration/',
+    slot: 'administration',
     description: (
       <>
         スケールインとスケールアウト、バックアップ、権限、パフォーマンスチューニング
@@ -283,7 +351,7 @@ const JapaneseFeatureList = [
   },
   {
     title: 'リファレンス',
-    url: '../../category/reference/',
+    slot: 'reference',
     description: (
       <>
         SQL 構文、コマンド、関数、変数
@@ -292,7 +360,7 @@ const JapaneseFeatureList = [
   },
   {
     title: 'FAQ',
-    url: '../../faq/',
+    slot: 'faq',
     description: (
       <>
         デプロイ、ロード、クエリー、権限 FAQ
@@ -301,7 +369,7 @@ const JapaneseFeatureList = [
   },
   {
     title: 'ベンチマーク',
-    url: '../../benchmarking/',
+    slot: 'benchmarking',
     description: (
       <>
         ベンチマーク：データベース・パフォーマンスの比較
@@ -310,10 +378,11 @@ const JapaneseFeatureList = [
   },
 ];
 
-function Feature({url, title, description}) {
+function Feature({slot, title, description}) {
+  const url = useFeatureUrl(slot);
   return (
     <div className={clsx('col col--6 margin-bottom--lg')}>
-     <Link href={url} target="_self" className="card padding--lg cardContainer_fWXF">
+     <Link to={url} target="_self" className="card padding--lg cardContainer_fWXF">
       <div className="text--center padding-horiz--md">
         <Heading as="h3">{title}</Heading>
         <p>{description}</p>

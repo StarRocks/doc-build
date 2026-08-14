@@ -62,13 +62,51 @@ jobs:
       - name: Check CloudFront markdown exclusions are in sync
         run: node scripts/check-cloudfront-excludes.js
 
+      # One locale per `yarn build`. Building all three in a single node process
+      # peaks above the runner's heap and gets OOM-killed partway through; a
+      # fresh process per locale stays inside the limit.
+      #
+      # This only works because docusaurus.config.js pins the zh and ja
+      # baseUrls — a single `--locale` disables automatic locale-segment
+      # inference, so without those pins zh and ja land on build/ and wipe the
+      # English site. en must run first: it writes to build/, which Docusaurus
+      # clears before writing.
+      # A failing locale does not stop the loop. The locales break independently
+      # — a broken link in the Japanese translation says nothing about English —
+      # and stopping at the first failure hides the rest, so a red build gets
+      # fixed one locale per day. All failures are reported together at the end
+      # and the step still exits non-zero, so the deploy steps below are skipped.
       - name: Build website
         run:  |
           export NODE_OPTIONS="--max_old_space_size=12288"
           export DOCUSAURUS_PERF_LOGGER=false
           export DOCUSAURUS_IGNORE_SSG_WARNINGS=true
           export BROWSERSLIST_IGNORE_OLD_DATA=true
-          yarn build
+          failed_locales=""
+          for locale in en zh ja; do
+            echo "::group::build ${locale}"
+            if yarn build --locale "${locale}"; then
+              echo "locale ${locale}: OK"
+            else
+              echo "::error::Locale ${locale} failed to build"
+              failed_locales="${failed_locales} ${locale}"
+            fi
+            echo "::endgroup::"
+          done
+          {
+            echo "| locale | result |"
+            echo "| --- | --- |"
+            for locale in en zh ja; do
+              case " ${failed_locales} " in
+                *" ${locale} "*) echo "| ${locale} | ❌ failed |" ;;
+                *)               echo "| ${locale} | ✅ ok |" ;;
+              esac
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ -n "${failed_locales}" ]; then
+            echo "Failed locales:${failed_locales}"
+            exit 1
+          fi
 
       - name: Post-process llms.txt and markdown for agents
         run: node scripts/llms-postprocess.js build

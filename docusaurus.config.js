@@ -44,6 +44,10 @@ const includedVersions = (() => {
 // Archived (non-latest) versions, i.e. the ones that get a /docs/<version>/ prefix.
 const archivedVersions = includedVersions.filter((v) => v !== lastVersion);
 
+// Hoisted so the pinned per-locale baseUrls in `i18n.localeConfigs` below can be
+// derived from it and can't drift out of sync.
+const baseUrl = '/';
+
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'StarRocks',
@@ -52,7 +56,7 @@ const config = {
 
   url: process.env.SITE_URL || 'https://docs.starrocks.io',
   // Set the /<baseUrl>/ pathname under which your site is served
-  baseUrl: '/',
+  baseUrl: baseUrl,
 
   // If you aren't using GitHub pages, you don't need these.
   organizationName: 'StarRocks', // Usually your GitHub org/user name.
@@ -86,6 +90,19 @@ const config = {
     },
   },
 
+  // We build one locale per `docusaurus build` invocation (see build.sh and the
+  // deploy workflows) because building all three in a single node process peaks
+  // above the runner's heap and gets OOM-killed.
+  //
+  // That makes pinning the non-default baseUrls mandatory. Docusaurus normally
+  // infers `<baseUrl><locale>/` for every non-default locale, but passing a
+  // single `--locale` turns the inference off
+  // (isAutomaticBaseUrlLocalizationDisabled: `cliOptions.locale?.length === 1`)
+  // and builds that locale as a standalone site at `/`. The output directory is
+  // derived from the baseUrl (server/site.js: `outDir = build + baseUrl minus
+  // config.baseUrl`), so without these pins the zh and ja builds would land on
+  // build/ and wipe the English site instead of writing build/zh/ and build/ja/.
+  // Do not drop them.
   i18n: {
     defaultLocale: 'en',
     locales: ['en', 'zh', 'ja'],
@@ -95,6 +112,10 @@ const config = {
       },
       zh: {
         htmlLang: 'zh-CN',
+        baseUrl: `${baseUrl}zh/`,
+      },
+      ja: {
+        baseUrl: `${baseUrl}ja/`,
       },
     },
   },
