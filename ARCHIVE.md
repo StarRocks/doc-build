@@ -112,75 +112,41 @@ nothing to freeze.
 
 ## Runbook: changing a doc in a frozen version
 
-Frozen versions are not supposed to change, but corrections happen. Before
-rebuilding, consider whether you need to: the cheapest fix for a wrong page in a
-frozen version is often to fix it in a supported version, or to accept it. A
-rebuild is a full CI run and touches the one thing on the site that nothing else
-can regenerate.
+Frozen versions are not supposed to change, but corrections happen.
 
-### The trap
+Run the **Rebuild_doc_archive** workflow from the Actions tab. Pick `stage`,
+check the page, then run it again with `prod`. That is the whole process — no
+branch, no config edit, no local build.
 
-Do **not** simply re-add the version to `versions.json` and run a normal deploy.
-`aws s3 sync --exclude` filters the **source** as well as the destination, so
-`--exclude docs/3.3/*` means the rebuilt pages are built and then silently *not
-uploaded*. The deploy goes green and nothing changes on the site.
+It runs on demand only (no schedule), and it has to run in CI rather than from a
+laptop because the bucket names and AWS credentials are repository secrets.
 
-### Recommended: run the deploy from a branch, without merging it
+### What it does
 
-You do not need to merge anything to rebuild a frozen version. A
-`workflow_dispatch` run takes two independent refs:
+`scripts/unfreeze-for-rebuild.js` puts the frozen versions back into
+`versions.json` for that one run. That file is both Docusaurus's versioning
+manifest and the list `cli.js` uses to choose starrocks branches, so restoring it
+is the only edit needed — the copy and the build both follow. The result is a
+build identical in shape to the pre-freeze one.
 
-| what | comes from |
-| --- | --- |
-| which workflow **file** runs (the deploy steps) | the ref you dispatch on: `gh workflow run --ref <branch>`, or the branch dropdown in the Actions UI |
-| which repo **code** gets built | the `docBuildBranch` input, used by the checkout step |
+Because every version is then present, the sync is a plain mirror with **no**
+frozen excludes. That is deliberate and it is the opposite of the daily deploy:
 
-Point both at a throwaway branch and you get a real, full deploy built from that
-branch and running that branch's sync step, while `main` is untouched. The
-branch is a one-off deployment configuration, not a code change.
+- the daily deploy must exclude the archive, or `--delete` destroys it;
+- this workflow must **not** exclude it, or the rebuilt pages are built and then
+  never uploaded — `aws s3 sync --exclude` filters the source as well as the
+  destination, so the run would go green and change nothing.
 
-That is the whole safety property: `main` keeps saying the version is frozen and
-keeps excluding it from the sync, so a scheduled run during the rebuild behaves
-exactly as it did the day before. Merging instead would make the version a
-permanently built one again and need a second PR to re-freeze it — and the
-tempting shortcut (un-freezing it in `frozenVersions.json` on `main`) opens a
-window where a cron can run with the version *not built* and *no longer
-protected*, which deletes it.
-
-1. Branch from `main`, e.g. `rebuild-3.3`.
-2. Re-add just that version to `versions.json`, to `includedVersions`, and to the
-   `versions` label map — keeping `banner: 'unmaintained'`, since the rebuilt
-   pages should still say they are unmaintained. Leave `frozenVersions.json`
-   alone.
-3. On that branch only, replace the two-pass sync with a targeted one that
-   writes nothing outside that version:
-
-   ```bash
-   # Assets first and additive, as always - the rebuilt pages reference new
-   # hashed chunks, and the other frozen versions still need the old ones.
-   aws s3 sync build/ s3://$BUCKET/ --quiet \
-     --exclude "*" --include "assets/*" --include "zh/assets/*" --include "ja/assets/*"
-
-   # Then only this version's trees. --delete is scoped to the prefix, so pages
-   # deleted upstream go away, and nothing else on the site can be touched.
-   for root in "" "zh/" "ja/"; do
-     aws s3 sync "build/${root}docs/3.3/" "s3://$BUCKET/${root}docs/3.3/" --quiet --delete
-   done
-   ```
-
-4. Dispatch **stage** with `--ref rebuild-3.3` and `docBuildBranch: rebuild-3.3`.
-   The `--ref` is what makes the branch's own workflow run; without it you get
-   `main`'s sync step and the trap above. Verify the changed page.
-5. Dispatch **prod** the same way.
-6. Delete the branch, or keep it if you want an audit trail of what was
-   rebuilt and when. Either way, do not merge it.
+A step before the sync fails the run if the archive is missing from `build/`,
+so a mirroring sync can never be reached with an incomplete build.
 
 ### Afterwards
 
 - If the rebuild added or removed pages, regenerate that version's entries in
   `frozenSitemapPaths.txt`, or Algolia will keep indexing URLs that are gone and
   miss the new ones.
-- The rebuilt pages pick up today's navbar, footer and announcement bar, so they
-  will not match the other frozen versions exactly. That is cosmetic.
-- The old hashed chunks stay in `assets/` - they are still referenced by the
-  frozen versions you did not rebuild.
+- The rebuilt pages pick up today's navbar, footer and announcement bar. If you
+  rebuild one version you are effectively rebuilding all of them, which keeps
+  the archive internally consistent.
+- Because the whole site is rewritten, this also refreshes the current versions.
+  It is a superset of a normal deploy, not a separate kind of write.
