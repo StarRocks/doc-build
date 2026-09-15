@@ -125,10 +125,27 @@ Do **not** simply re-add the version to `versions.json` and run a normal deploy.
 `--exclude docs/3.3/*` means the rebuilt pages are built and then silently *not
 uploaded*. The deploy goes green and nothing changes on the site.
 
-### Recommended: a rebuild branch that is dispatched but never merged
+### Recommended: run the deploy from a branch, without merging it
 
-Keeping `main` frozen means the protection never lapses and the cron is
-unaffected, so there is no window in which a scheduled run can delete the tree.
+You do not need to merge anything to rebuild a frozen version. A
+`workflow_dispatch` run takes two independent refs:
+
+| what | comes from |
+| --- | --- |
+| which workflow **file** runs (the deploy steps) | the ref you dispatch on: `gh workflow run --ref <branch>`, or the branch dropdown in the Actions UI |
+| which repo **code** gets built | the `docBuildBranch` input, used by the checkout step |
+
+Point both at a throwaway branch and you get a real, full deploy built from that
+branch and running that branch's sync step, while `main` is untouched. The
+branch is a one-off deployment configuration, not a code change.
+
+That is the whole safety property: `main` keeps saying the version is frozen and
+keeps excluding it from the sync, so a scheduled run during the rebuild behaves
+exactly as it did the day before. Merging instead would make the version a
+permanently built one again and need a second PR to re-freeze it — and the
+tempting shortcut (un-freezing it in `frozenVersions.json` on `main`) opens a
+window where a cron can run with the version *not built* and *no longer
+protected*, which deletes it.
 
 1. Branch from `main`, e.g. `rebuild-3.3`.
 2. Re-add just that version to `versions.json`, to `includedVersions`, and to the
@@ -155,7 +172,8 @@ unaffected, so there is no window in which a scheduled run can delete the tree.
    The `--ref` is what makes the branch's own workflow run; without it you get
    `main`'s sync step and the trap above. Verify the changed page.
 5. Dispatch **prod** the same way.
-6. Delete the branch. Do not merge it.
+6. Delete the branch, or keep it if you want an audit trail of what was
+   rebuilt and when. Either way, do not merge it.
 
 ### Afterwards
 
