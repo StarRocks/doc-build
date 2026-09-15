@@ -109,3 +109,44 @@ nothing to freeze.
    `versions` label map (Docusaurus throws on unknown keys in the latter two, so all
    three move together), add the archived dropdown entry, and extend
    `algolia.externalUrlRegex` and `src/theme/NotFound`.
+
+## Runbook: changing a doc in a frozen version
+
+Frozen versions are not supposed to change, but corrections happen.
+
+Run the **Rebuild_doc_archive** workflow from the Actions tab. Pick `stage`,
+check the page, then run it again with `prod`. That is the whole process — no
+branch, no config edit, no local build.
+
+It runs on demand only (no schedule), and it has to run in CI rather than from a
+laptop because the bucket names and AWS credentials are repository secrets.
+
+### What it does
+
+`scripts/unfreeze-for-rebuild.js` puts the frozen versions back into
+`versions.json` for that one run. That file is both Docusaurus's versioning
+manifest and the list `cli.js` uses to choose starrocks branches, so restoring it
+is the only edit needed — the copy and the build both follow. The result is a
+build identical in shape to the pre-freeze one.
+
+Because every version is then present, the sync is a plain mirror with **no**
+frozen excludes. That is deliberate and it is the opposite of the daily deploy:
+
+- the daily deploy must exclude the archive, or `--delete` destroys it;
+- this workflow must **not** exclude it, or the rebuilt pages are built and then
+  never uploaded — `aws s3 sync --exclude` filters the source as well as the
+  destination, so the run would go green and change nothing.
+
+A step before the sync fails the run if the archive is missing from `build/`,
+so a mirroring sync can never be reached with an incomplete build.
+
+### Afterwards
+
+- If the rebuild added or removed pages, regenerate that version's entries in
+  `frozenSitemapPaths.txt`, or Algolia will keep indexing URLs that are gone and
+  miss the new ones.
+- The rebuilt pages pick up today's navbar, footer and announcement bar. If you
+  rebuild one version you are effectively rebuilding all of them, which keeps
+  the archive internally consistent.
+- Because the whole site is rewritten, this also refreshes the current versions.
+  It is a superset of a normal deploy, not a separate kind of write.

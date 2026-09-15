@@ -134,12 +134,90 @@ jobs:
         env:
           BUCKET_SECRET: ${{ secrets.AWS_OSS_DOCS_STAGE_BUCKET }}
         run: |
-          aws s3 sync build/ s3://$BUCKET_SECRET/ --quiet --delete $*
+          set -euo pipefail
+          # Versions in frozenVersions.json are no longer built, but their HTML
+          # is still served. The sync mirrors build/ onto the bucket ROOT, which
+          # is the URL root, so without these excludes `--delete` removes every
+          # page of every frozen version. See ARCHIVE.md.
+          FROZEN_EXCLUDES="$(node scripts/frozen-sync-flags.js)"
+          if [ -z "$FROZEN_EXCLUDES" ]; then
+            echo "::error::frozen-sync-flags.js produced no excludes - refusing to sync"
+            exit 1
+          fi
+          echo "Protecting frozen trees: $FROZEN_EXCLUDES"
+
+          # Pass 1: assets, ADDITIVE (no --delete).
+          #
+          # Frozen pages load content-hashed JS/CSS that this build will never
+          # emit again, and Docusaurus puts everything it hashes under the
+          # per-locale assets/ dir. Mirroring it would leave the frozen HTML in
+          # place but strip every chunk it references.
+          #
+          # This runs FIRST. Uploading HTML before the chunks it references
+          # leaves a window where live pages 404 on their JS - and CloudFront
+          # caches those 404s, since the invalidation is the last step.
+          # Content-hashed names mean this can never overwrite a file whose
+          # contents differ.
+          aws s3 sync build/ s3://$BUCKET_SECRET/ --quiet \
+            --exclude "*" \
+            --include "assets/*" --include "zh/assets/*" --include "ja/assets/*"
+
+          # Pass 2: everything else, mirrored. --delete cannot reach assets/ or
+          # the frozen doc trees.
+          aws s3 sync build/ s3://$BUCKET_SECRET/ --quiet --delete \
+            --exclude "assets/*" --exclude "zh/assets/*" --exclude "ja/assets/*" \
+            $FROZEN_EXCLUDES
+
           # Serve Markdown twins as text/markdown so agents (and content
           # negotiation) get a readable response body, not a file download.
           aws s3 cp build/ s3://$BUCKET_SECRET/ --quiet --recursive \
             --exclude "*" --include "*.md" \
             --content-type "text/markdown; charset=utf-8"
+
+      # Empirical check, not static analysis of the flags above: an aws-cli
+      # filter-semantics change or a quoting bug would still pass a lint but
+      # would show up here immediately, on the run that caused it, rather than
+      # weeks later when somebody follows a link.
+      - name: Verify frozen doc trees survived the sync
+        env:
+          BUCKET_SECRET: ${{ secrets.AWS_OSS_DOCS_STAGE_BUCKET }}
+        run: |
+          set -uo pipefail
+          missing=""
+          for v in $(node -p "require('./frozenVersions.json').join(' ')"); do
+            for root in "docs" "zh/docs" "ja/docs"; do
+              key="${root}/${v}/introduction/index.html"
+              if ! aws s3api head-object --bucket "$BUCKET_SECRET" --key "$key" >/dev/null 2>&1; then
+                missing="${missing} ${key}"
+              fi
+            done
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Frozen doc trees are missing from S3:${missing}"
+            echo "The archive has been deleted. Do NOT re-run the deploy - see ARCHIVE.md."
+            exit 1
+          fi
+          echo "All frozen doc trees present in s3://<bucket>/."
+
+      # The only chance to record which hashed assets the frozen HTML depends
+      # on is a build that still emits every version. Nothing reads this yet; it
+      # is what a future assets/ garbage collector needs, since webpack builds
+      # chunk URLs from an in-JS id->hash map and the referenced set cannot be
+      # recovered by grepping the frozen HTML.
+      - name: Capture frozen asset manifest
+        if: always()
+        run: |
+          set -uo pipefail
+          ( cd build && find assets zh/assets ja/assets -type f 2>/dev/null | sort ) \
+            > frozen-assets-manifest.txt || true
+          wc -l frozen-assets-manifest.txt || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: frozen-assets-manifest-stage
+          path: frozen-assets-manifest.txt
+          if-no-files-found: warn
 
       - name: clean cdn cache
         env:
