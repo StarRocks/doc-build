@@ -160,11 +160,15 @@ jobs:
             detail="Failed outside the build loop - check which step failed in the run log."
           fi
           # jq builds the payload so quotes and newlines in the detail text
-          # cannot produce malformed JSON.
+          # cannot produce malformed JSON. --fail-with-body makes a rotated or
+          # revoked webhook fail this step instead of passing silently: curl
+          # exits 0 on an HTTP error otherwise, and Slack reports problems in
+          # the response body (it answers a good POST with "ok").
           text=$(printf '%s\n%s\n%s' \
             ":rotating_light: *Prod docs deploy failed* (branch \`${INPUTS_BRANCH}\`, trigger \`${{ github.event_name }}\`)" \
             "${detail}" \
             "${RUN_URL}")
           jq -n --arg t "$text" \
             '{username: "Docs deploy", icon_emoji: ":rotating_light:", text: $t}' \
-            | curl -sS -X POST -H 'Content-type: application/json' --data @- "$SLACK_WEBHOOK"
+            | curl -sS --fail-with-body -X POST -H 'Content-type: application/json' \
+                --data @- "$SLACK_WEBHOOK"
