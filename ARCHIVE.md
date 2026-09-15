@@ -109,3 +109,60 @@ nothing to freeze.
    `versions` label map (Docusaurus throws on unknown keys in the latter two, so all
    three move together), add the archived dropdown entry, and extend
    `algolia.externalUrlRegex` and `src/theme/NotFound`.
+
+## Runbook: changing a doc in a frozen version
+
+Frozen versions are not supposed to change, but corrections happen. Before
+rebuilding, consider whether you need to: the cheapest fix for a wrong page in a
+frozen version is often to fix it in a supported version, or to accept it. A
+rebuild is a full CI run and touches the one thing on the site that nothing else
+can regenerate.
+
+### The trap
+
+Do **not** simply re-add the version to `versions.json` and run a normal deploy.
+`aws s3 sync --exclude` filters the **source** as well as the destination, so
+`--exclude docs/3.3/*` means the rebuilt pages are built and then silently *not
+uploaded*. The deploy goes green and nothing changes on the site.
+
+### Recommended: a rebuild branch that is dispatched but never merged
+
+Keeping `main` frozen means the protection never lapses and the cron is
+unaffected, so there is no window in which a scheduled run can delete the tree.
+
+1. Branch from `main`, e.g. `rebuild-3.3`.
+2. Re-add just that version to `versions.json`, to `includedVersions`, and to the
+   `versions` label map — keeping `banner: 'unmaintained'`, since the rebuilt
+   pages should still say they are unmaintained. Leave `frozenVersions.json`
+   alone.
+3. On that branch only, replace the two-pass sync with a targeted one that
+   writes nothing outside that version:
+
+   ```bash
+   # Assets first and additive, as always - the rebuilt pages reference new
+   # hashed chunks, and the other frozen versions still need the old ones.
+   aws s3 sync build/ s3://$BUCKET/ --quiet \
+     --exclude "*" --include "assets/*" --include "zh/assets/*" --include "ja/assets/*"
+
+   # Then only this version's trees. --delete is scoped to the prefix, so pages
+   # deleted upstream go away, and nothing else on the site can be touched.
+   for root in "" "zh/" "ja/"; do
+     aws s3 sync "build/${root}docs/3.3/" "s3://$BUCKET/${root}docs/3.3/" --quiet --delete
+   done
+   ```
+
+4. Dispatch **stage** with `--ref rebuild-3.3` and `docBuildBranch: rebuild-3.3`.
+   The `--ref` is what makes the branch's own workflow run; without it you get
+   `main`'s sync step and the trap above. Verify the changed page.
+5. Dispatch **prod** the same way.
+6. Delete the branch. Do not merge it.
+
+### Afterwards
+
+- If the rebuild added or removed pages, regenerate that version's entries in
+  `frozenSitemapPaths.txt`, or Algolia will keep indexing URLs that are gone and
+  miss the new ones.
+- The rebuilt pages pick up today's navbar, footer and announcement bar, so they
+  will not match the other frozen versions exactly. That is cosmetic.
+- The old hashed chunks stay in `assets/` - they are still referenced by the
+  frozen versions you did not rebuild.
