@@ -191,8 +191,16 @@ const cleanup = () => {
     }
   }
 
-  // versions.md is specific to the latest release; remove it from older versions
-  for (const ver of ['3.2', '3.1']) {
+  // developers/ is copied from `main` into every version (above), but
+  // developers/versions.md links to
+  // ../deployment/preparation/environment_configurations.md, which only exists
+  // from 3.5 onward — 3.4 and older predate the upstream docs restructure. With
+  // onBrokenMarkdownLinks: 'throw' that fails the build for every locale, so
+  // drop the file from the pre-restructure versions.
+  //
+  // 3.2 and 3.1 were already listed here; 3.3 and 3.4 broke when versions.md
+  // gained that link upstream, which is what turned the daily build red.
+  for (const ver of ['3.4', '3.3', '3.2', '3.1']) {
     for (const dir of allLocaleDirsFor(ver)) {
       removeSilent(path.join(dir, 'developers', 'versions.md'));
     }
