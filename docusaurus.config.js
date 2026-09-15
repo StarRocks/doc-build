@@ -149,6 +149,17 @@ const config = {
           //onlyIncludeVersions: ['4.1', '4.0', '3.5', '3.4', '3.3', 3.2', '3.1'],
           onlyIncludeVersions: includedVersions,
 
+          // Versions listed in frozenVersions.json get banner: 'unmaintained'
+          // (Docusaurus's built-in "this version is no longer maintained, see
+          // the latest" notice). This is the LAST build that emits them; after
+          // the freeze they are served from S3 and never rebuilt, so the banner
+          // has to be baked in now. See ARCHIVE.md.
+          //
+          // Deliberately NOT noIndex: that emits <meta name="robots"
+          // content="noindex">, which the Algolia crawler honors, and would drop
+          // the frozen versions out of site search. The
+          // `User-Agent: Algolia Crawler / Allow: /` group in static/robots.txt
+          // is what keeps them indexed despite `Disallow: /docs/3.*/`.
           versions: (() => {
             if (isVersioningDisabled) {
               return { current: { label: 'current' } };
@@ -157,10 +168,10 @@ const config = {
                 '4.1': { label: 'Latest-4.1', banner: 'none' },
 				'4.0': { label: '4.0', banner: 'none' },
                 '3.5': { label: 'Stable-3.5', banner: 'none' },
-                '3.4': { label: '3.4', banner: 'none' },
-                '3.3': { label: '3.3', banner: 'none' },
-                '3.2': { label: '3.2', banner: 'none' },
-                '3.1': { label: '3.1', banner: 'none' },
+                '3.4': { label: '3.4', banner: 'unmaintained' },
+                '3.3': { label: '3.3', banner: 'unmaintained' },
+                '3.2': { label: '3.2', banner: 'unmaintained' },
+                '3.1': { label: '3.1', banner: 'unmaintained' },
               };
             }
           })(),
@@ -238,6 +249,10 @@ const config = {
   ],
   plugins: [
     './src/plugins/tailwind-config.js',
+    // Frozen-archive navigation guard. Inert unless the page being served is
+    // inside a frozenVersions.json tree, so it is registered for every locale
+    // and every build. See src/plugins/frozen-archive.js and ARCHIVE.md.
+    './src/plugins/frozen-archive.js',
     // Agent-Friendly Docs: HTML/markdown llms.txt directives + llms.txt splitting.
     // Only for the default (en) locale — markdown files and llms.txt only exist there.
     ...(isDefaultLocale ? ['./src/plugins/agent-friendly-docs.js'] : []),
