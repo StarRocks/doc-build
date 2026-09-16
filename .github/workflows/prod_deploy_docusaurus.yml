@@ -9,7 +9,22 @@ on:
         type: string
         
   schedule:
-      - cron: "5 10 * * 1-5"
+      # 10:05 AM US Eastern during EDT, so the deploy lands inside the working
+      # day and somebody is around to see it fail.
+      #
+      # GitHub cron is UTC and does not observe DST, so this reads as 9:05 AM
+      # Eastern from early November to mid-March. `5 15` would be the winter-
+      # correct value but 11:05 AM in summer; EDT covers roughly eight months of
+      # the year, so this is the better of the two fixed choices.
+      #
+      # Scheduled runs are also delayed under GitHub load — the nominal 10:05 UTC
+      # run on 2026-09-15 actually started at 10:21 — so don't count on the
+      # minute.
+      #
+      # Stage stays at 09:05 UTC and so still runs first, now five hours ahead
+      # instead of one. That lead time is useful rather than merely earlier
+      # because a failed stage build posts to Slack.
+      - cron: "5 14 * * 1-5"
 env:
   AWS_KEY: ${{ secrets.AWS_KEY }}
   AWS_SECRET: ${{ secrets.AWS_SECRET }}
