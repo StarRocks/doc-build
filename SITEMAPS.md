@@ -130,7 +130,13 @@ nothing else — so the algolia instance's `createSitemapItems` injects them fro
 Without that injection the pages stay online while Algolia drops ~3,700 of them
 on its next crawl, and the only symptom is search results disappearing weeks
 later. `scripts/check-sitemap-markdown-coverage.js` asserts every frozen version
-is present. Regenerate the list if an archive rebuild adds or removes pages.
+is present.
+
+Regenerate the list with `node scripts/regenerate-frozen-sitemap-paths.js` after
+an archive rebuild has deployed. The injection is skipped in a rebuild — the
+frozen versions are real routes there — so that build's sitemap is the one
+authoritative picture of what the archive actually holds, and it is also why the
+two files never double-count.
 
 ## When a new version ships
 

@@ -317,6 +317,17 @@ const config = {
         // complete list the Algolia crawler depends on.
         createSitemapItems: async ({defaultCreateSitemapItems, ...rest}) => {
           const items = await defaultCreateSitemapItems(rest);
+          // An archive rebuild (scripts/unfreeze-for-rebuild.js) puts the frozen
+          // versions back into versions.json, so they ARE real routes in that
+          // build and the default items already cover them. Injecting as well
+          // would duplicate every frozen URL. Skipping also makes that run's
+          // sitemap a clean source for regenerating frozenSitemapPaths.txt —
+          // see scripts/regenerate-frozen-sitemap-paths.js.
+          const isFrozenRoute = (u) =>
+            frozenVersions.some((v) => new URL(u).pathname.includes(`/docs/${v}/`));
+          if (items.some((item) => isFrozenRoute(item.url))) {
+            return items;
+          }
           const {url, baseUrl: localeBaseUrl} = rest.siteConfig;
           // siteConfig.baseUrl is the locale's baseUrl ('/', '/zh/', '/ja/'),
           // so each locale's file lists its own copies of the frozen pages —
