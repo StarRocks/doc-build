@@ -119,6 +119,19 @@ and both deploy workflows) and fails if:
 The last two are what make step 3 safe: a trim that accidentally removes archived
 versions from *both* files fails the build instead of silently gutting search.
 
+## Frozen versions
+
+Versions in `frozenVersions.json` are no longer built (see `ARCHIVE.md`), so
+their routes do not exist and `defaultCreateSitemapItems` cannot produce them.
+They are still served, and the Algolia crawler reads `/sitemap-algolia.xml` and
+nothing else — so the algolia instance's `createSitemapItems` injects them from
+`frozenSitemapPaths.txt`, a list captured from the last build that emitted them.
+
+Without that injection the pages stay online while Algolia drops ~3,700 of them
+on its next crawl, and the only symptom is search results disappearing weeks
+later. `scripts/check-sitemap-markdown-coverage.js` asserts every frozen version
+is present. Regenerate the list if an archive rebuild adds or removes pages.
+
 ## When a new version ships
 
 `lastVersion`, `includedVersions` and `archivedVersions` are defined together at
