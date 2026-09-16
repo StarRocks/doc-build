@@ -140,9 +140,16 @@ const cleanup = () => {
   //   zh: version-3.1 only (other zh versions have them from their git branches)
   //   ja: all versions (ja branches do not include IDE images)
   //   en: not needed (present in each version's git branch)
+  //
+  // The zh target is filtered against the versions actually in this build. 3.1 is
+  // frozen and normally absent, and copyGlob creates its destination, so naming
+  // it unconditionally would leave a stray version-3.1 dir holding images and no
+  // docs. It comes back when scripts/unfreeze-for-rebuild.js restores 3.1 for an
+  // archive rebuild, which is when the copy is actually needed.
+  const zhIdeImageVersions = versionedBranches.filter((v) => v === '3.1');
   for (const pattern of ['IDEA*.png', 'ide*.png']) {
     copyGlob(latestEnAssets, pattern, [
-      path.join(localeDirFor('zh', '3.1'), '_assets'),
+      ...zhIdeImageVersions.map(v => path.join(localeDirFor('zh', v), '_assets')),
       ...versionedBranches.map(v => path.join(localeDirFor('ja', v), '_assets')),
     ]);
   }

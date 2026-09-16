@@ -38,6 +38,7 @@ const fs = require('fs');
 const path = require('path');
 
 const {hasMarkdownTwin} = require('../src/agentDocsRoutes');
+const frozenVersions = require('../frozenVersions.json');
 
 // How many leading URLs a sampler is assumed to take. afdocs.dev samples 50.
 // Checked with headroom so a checker that samples somewhat deeper still passes.
@@ -155,10 +156,34 @@ if (algoliaArchived === 0) {
   process.exit(1);
 }
 
+// 4. Every frozen version must still be listed in sitemap-algolia.xml.
+//    Frozen versions are served from S3 but are no longer routes, so nothing in
+//    the build produces these entries — docusaurus.config.js injects them from
+//    frozenSitemapPaths.txt. If that injection breaks, the pages keep being
+//    served while Algolia quietly drops ~3,700 of them on its next crawl, and
+//    the only symptom is search results going missing weeks later. Assertion 4
+//    above only checks that SOME archived URL is present, which 4.0 and 3.5
+//    satisfy on their own.
+const missingFrozen = frozenVersions.filter(
+  (v) => !algoliaPathnames.some((p) => p.startsWith(`/docs/${v}/`)),
+);
+if (missingFrozen.length) {
+  console.error(
+    `\n\u2716 Sitemap coverage: frozen version(s) ${missingFrozen.join(', ')} are absent ` +
+      `from sitemap-algolia.xml.\n\n` +
+      `Those versions are still served but are no longer built, so their URLs come\n` +
+      `from frozenSitemapPaths.txt via the algolia sitemap instance's\n` +
+      `createSitemapItems in docusaurus.config.js. Check that injection — the\n` +
+      `Algolia crawler reads this file and nothing else lists these pages.\n`,
+  );
+  process.exit(1);
+}
+
 const archivedTotal = pathnames.filter((p) => ARCHIVED.test(p)).length;
 console.log(
   `✔ Sitemap markdown coverage: ${withTwin.length}/${sample.length} of the first ` +
     `${SAMPLE_SIZE} URLs have a Markdown twin ` +
     `(sitemap.xml: ${pathnames.length} URLs, ${archivedTotal} archived; ` +
-    `sitemap-algolia.xml: ${algoliaPathnames.length} URLs, ${algoliaArchived} archived).`,
+    `sitemap-algolia.xml: ${algoliaPathnames.length} URLs, ${algoliaArchived} archived, ` +
+    `frozen ${frozenVersions.join('/')} present).`,
 );

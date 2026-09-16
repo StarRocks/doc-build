@@ -7,6 +7,17 @@
 import {themes as prismThemes} from 'prism-react-renderer';
 import versions from './versions.json';
 import frozenVersions from './frozenVersions.json';
+
+// Page paths of the frozen versions, captured from the last build that still
+// emitted them. Injected into sitemap-algolia.xml below, because those routes no
+// longer exist in this build and nothing else would list them — Algolia would
+// drop ~3,700 still-served pages from search on its next crawl. Regenerate it if
+// an archive rebuild adds or removes pages (see ARCHIVE.md).
+const frozenSitemapPaths = require('node:fs')
+  .readFileSync(require('node:path').join(__dirname, 'frozenSitemapPaths.txt'), 'utf8')
+  .split('\n')
+  .map((line) => line.trim())
+  .filter(Boolean);
 import agentDocsRoutes from './src/agentDocsRoutes.js';
 
 // Used to limit build to just two versions for debugging
@@ -301,6 +312,30 @@ const config = {
       {
         id: 'algolia',
         filename: 'sitemap-algolia.xml',
+        // Frozen versions are still served but are no longer routes, so the
+        // default items cannot include them. Inject them so this file stays the
+        // complete list the Algolia crawler depends on.
+        createSitemapItems: async ({defaultCreateSitemapItems, ...rest}) => {
+          const items = await defaultCreateSitemapItems(rest);
+          const {url, baseUrl: localeBaseUrl} = rest.siteConfig;
+          // siteConfig.baseUrl is the locale's baseUrl ('/', '/zh/', '/ja/'),
+          // so each locale's file lists its own copies of the frozen pages —
+          // which is what this file contained before the freeze.
+          const prefix = `${url.replace(/\/$/, '')}${localeBaseUrl.replace(/\/$/, '')}`;
+          // Borrow changefreq/priority from the generated items so the injected
+          // entries are shaped identically. lastmod is null: frozen pages have no
+          // meaningful one, and the default items already use null.
+          const {changefreq, priority} = items[0] ?? {};
+          return [
+            ...items,
+            ...frozenSitemapPaths.map((path) => ({
+              url: `${prefix}${path}`,
+              changefreq,
+              priority,
+              lastmod: null,
+            })),
+          ];
+        },
       },
     ],
     [
@@ -392,6 +427,39 @@ const config = {
             type: 'docsVersionDropdown',
             docsPluginId: 'default',
             position: 'left',
+            dropdownItemsAfter: [
+              {type: 'html', value: '<hr class="dropdown-separator">'},
+              {
+                type: 'html',
+                className: 'dropdown-archived-versions',
+                value: '<b>Archived versions</b>',
+              },
+              // Three details here are load-bearing.
+              //
+              // `pathname://` — @docusaurus/Link treats any protocol-less URL as
+              // internal (Link.js: `to || href`, then isInternalUrl), so a plain
+              // '/docs/3.4/introduction/' would be handed to the react-router
+              // Link AND collected by the broken-link checker, failing the build
+              // under onBrokenLinks: 'throw' now that those routes are gone. The
+              // pathname:// prefix makes it non-internal: a plain <a>, a real
+              // document request, and no broken-link check. The locale baseUrl is
+              // still applied, so the zh build emits /zh/docs/3.4/... .
+              //
+              // '/introduction/' rather than the version root — /docs/3.4/ is a
+              // 404, exactly like /docs/ is. Verified 200 for every frozen
+              // version in all three locales.
+              //
+              // target: '_self' — Link adds target="_blank" for non-internal
+              // links, and the prop spread wins over it.
+              //
+              // The trailing slash is written by hand because applyTrailingSlash
+              // is skipped for non-internal links.
+              ...frozenVersions.map((v) => ({
+                href: `pathname:///docs/${v}/introduction/`,
+                target: '_self',
+                label: v,
+              })),
+            ],
           },
           {
             type: 'localeDropdown',
@@ -511,6 +579,15 @@ const config = {
         apiKey: '08af8d37380974edb873fe8fd61e8dda',
   
         indexName: 'starrocks',
+
+        // DocSearch hits on frozen versions must be full page loads. Those
+        // routes are not in this bundle, so letting the router handle them
+        // renders the 404 page for a URL the server serves correctly.
+        // Matched against the full hit URL by
+        // theme-search-algolia useSearchResultUrlProcessor / useNavigator.
+        externalUrlRegex: `/(?:zh/|ja/)?docs/(?:${frozenVersions
+          .map((v) => v.replace('.', '\\.'))
+          .join('|')})/`,
   
         // Optional: see doc section below
         contextualSearch: true,
