@@ -6,6 +6,7 @@
 
 import {themes as prismThemes} from 'prism-react-renderer';
 import versions from './versions.json';
+import frozenVersions from './frozenVersions.json';
 import agentDocsRoutes from './src/agentDocsRoutes.js';
 
 // Used to limit build to just two versions for debugging
@@ -38,11 +39,44 @@ const includedVersions = (() => {
   if (isBuildFast) {
     return [...versions.slice(0, 2)];
   }
-  return ['4.1', '4.0', '3.5', '3.4', '3.3', '3.2', '3.1'];
+  // Derived from versions.json rather than repeated here. That file is
+  // Docusaurus's own versioning manifest and is also what cli.js reads, so it is
+  // the one place a version has to be added or removed — including by
+  // scripts/unfreeze-for-rebuild.js, which puts the frozen versions back for an
+  // archive rebuild.
+  return [...versions];
 })();
 
 // Archived (non-latest) versions, i.e. the ones that get a /docs/<version>/ prefix.
 const archivedVersions = includedVersions.filter((v) => v !== lastVersion);
+
+// Per-version label and banner, generated so that a version roll or an archive
+// rebuild cannot leave a stale hand-written entry behind. Docusaurus throws if
+// this map names a version that is not in versions.json, so it has to track the
+// same source.
+//
+// "Latest-" derives from lastVersion. "Stable" is a product decision, so it
+// stays an explicit override.
+//
+// Frozen versions get banner: 'unmaintained' — Docusaurus's built-in "no longer
+// maintained, see the latest" notice, linking to the same page in the current
+// version. Deliberately NOT noIndex: that emits <meta name="robots"
+// content="noindex">, which the Algolia crawler honors, and would drop the
+// frozen versions out of site search. The `User-Agent: Algolia Crawler /
+// Allow: /` group in static/robots.txt is what keeps them indexed despite
+// `Disallow: /docs/3.*/`.
+const STABLE_VERSION = '3.5';
+const frozenVersionSet = new Set(frozenVersions);
+const versionsConfig = Object.fromEntries(
+  includedVersions.map((v) => [
+    v,
+    {
+      label:
+        v === lastVersion ? `Latest-${v}` : v === STABLE_VERSION ? `Stable-${v}` : v,
+      banner: frozenVersionSet.has(v) ? 'unmaintained' : 'none',
+    },
+  ]),
+);
 
 // Hoisted so the pinned per-locale baseUrls in `i18n.localeConfigs` below can be
 // derived from it and can't drift out of sync.
@@ -149,21 +183,20 @@ const config = {
           //onlyIncludeVersions: ['4.1', '4.0', '3.5', '3.4', '3.3', 3.2', '3.1'],
           onlyIncludeVersions: includedVersions,
 
-          versions: (() => {
-            if (isVersioningDisabled) {
-              return { current: { label: 'current' } };
-            } else {
-              return {
-                '4.1': { label: 'Latest-4.1', banner: 'none' },
-				'4.0': { label: '4.0', banner: 'none' },
-                '3.5': { label: 'Stable-3.5', banner: 'none' },
-                '3.4': { label: '3.4', banner: 'none' },
-                '3.3': { label: '3.3', banner: 'none' },
-                '3.2': { label: '3.2', banner: 'none' },
-                '3.1': { label: '3.1', banner: 'none' },
-              };
-            }
-          })(),
+          // Versions listed in frozenVersions.json get banner: 'unmaintained'
+          // (Docusaurus's built-in "this version is no longer maintained, see
+          // the latest" notice). This is the LAST build that emits them; after
+          // the freeze they are served from S3 and never rebuilt, so the banner
+          // has to be baked in now. See ARCHIVE.md.
+          //
+          // Deliberately NOT noIndex: that emits <meta name="robots"
+          // content="noindex">, which the Algolia crawler honors, and would drop
+          // the frozen versions out of site search. The
+          // `User-Agent: Algolia Crawler / Allow: /` group in static/robots.txt
+          // is what keeps them indexed despite `Disallow: /docs/3.*/`.
+          versions: isVersioningDisabled
+            ? { current: { label: 'current' } }
+            : versionsConfig,
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
@@ -238,6 +271,10 @@ const config = {
   ],
   plugins: [
     './src/plugins/tailwind-config.js',
+    // Frozen-archive navigation guard. Inert unless the page being served is
+    // inside a frozenVersions.json tree, so it is registered for every locale
+    // and every build. See src/plugins/frozen-archive.js and ARCHIVE.md.
+    './src/plugins/frozen-archive.js',
     // Agent-Friendly Docs: HTML/markdown llms.txt directives + llms.txt splitting.
     // Only for the default (en) locale — markdown files and llms.txt only exist there.
     ...(isDefaultLocale ? ['./src/plugins/agent-friendly-docs.js'] : []),

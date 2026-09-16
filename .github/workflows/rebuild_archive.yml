@@ -1,0 +1,179 @@
+# Rebuild the frozen doc versions and replace the archive in S3.
+#
+# Versions listed in frozenVersions.json are not built by the daily deploy; their
+# HTML is served from S3 and the deploy's sync excludes it so `--delete` cannot
+# reach it (see ARCHIVE.md). This workflow is how a frozen version gets changed:
+# it restores those versions for one build and writes the whole site, archive
+# included.
+#
+# On demand only - there is deliberately no `schedule`. Running here rather than
+# from a laptop is also what makes it usable: the bucket names and AWS
+# credentials are repository secrets.
+#
+# Because every version is built, this run needs NO frozen excludes - there is
+# nothing to protect that is not being uploaded. That is why the sync below is a
+# plain mirror and does not use scripts/frozen-sync-flags.js.
+name: Rebuild_doc_archive
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Which site to rebuild'
+        required: true
+        default: 'stage'
+        type: choice
+        options: [stage, prod]
+      docBuildBranch:
+        description: 'doc-build branch to build with'
+        required: true
+        default: 'main'
+        type: string
+env:
+  AWS_KEY: ${{ secrets.AWS_KEY }}
+  AWS_SECRET: ${{ secrets.AWS_SECRET }}
+jobs:
+  rebuild_archive:
+    env:
+      INPUTS_BRANCH: "${{ inputs.docBuildBranch || 'main' }}"
+      TARGET: "${{ inputs.target }}"
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ env.INPUTS_BRANCH }}
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 24
+          cache: 'yarn'
+          cache-dependency-path: 'yarn.lock'
+
+      - uses: actions/cache@v3
+        id: cache
+        with:
+          path: ./node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET }}
+          aws-region: us-west-2
+
+      - uses: actions/checkout@v3
+        with:
+          repository: starrocks/starrocks
+          fetch-depth: 0
+          path: ./temp
+
+      - name: Install Dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          yarn install --frozen-lockfile
+
+      # The one thing that makes this different from the daily deploy. It puts
+      # the frozen versions back into versions.json, which is both Docusaurus's
+      # versioning manifest and the list cli.js uses to pick starrocks branches,
+      # so the copy and the build both pick them up with no other change.
+      - name: Restore frozen versions for this build
+        run: node scripts/unfreeze-for-rebuild.js
+
+      - name: Copy docs from the starrocks repo
+        run: npm run copy
+
+      - name: Check CloudFront markdown exclusions are in sync
+        run: node scripts/check-cloudfront-excludes.js
+
+      # One locale per `yarn build`; en first. Same constraints as the deploy
+      # workflows - see the comment there.
+      - name: Build website
+        id: build
+        run: |
+          if [ "$TARGET" = "stage" ]; then
+            export SITE_URL=https://docs-stage.starrocks.io
+          fi
+          export NODE_OPTIONS="--max_old_space_size=12288"
+          export DOCUSAURUS_PERF_LOGGER=false
+          export DOCUSAURUS_IGNORE_SSG_WARNINGS=true
+          export BROWSERSLIST_IGNORE_OLD_DATA=true
+          failed_locales=""
+          for locale in en zh ja; do
+            echo "::group::build ${locale}"
+            if yarn build --locale "${locale}"; then
+              echo "locale ${locale}: OK"
+            else
+              echo "::error::Locale ${locale} failed to build"
+              failed_locales="${failed_locales} ${locale}"
+            fi
+            echo "::endgroup::"
+          done
+          echo "failed_locales=${failed_locales# }" >> "$GITHUB_OUTPUT"
+          if [ -n "${failed_locales}" ]; then
+            echo "Failed locales:${failed_locales}"
+            exit 1
+          fi
+
+      - name: Post-process llms.txt and markdown for agents
+        env:
+          SITE_URL: ${{ inputs.target == 'stage' && 'https://docs-stage.starrocks.io' || '' }}
+        run: node scripts/llms-postprocess.js build
+
+      - name: Check sitemap markdown coverage
+        run: node scripts/check-sitemap-markdown-coverage.js build
+
+      - name: Confirm the archive was actually built
+        run: |
+          set -uo pipefail
+          missing=""
+          for v in $(node -p "require('./frozenVersions.json').join(' ')"); do
+            for root in "" "zh/" "ja/"; do
+              [ -f "build/${root}docs/${v}/introduction/index.html" ] || missing="${missing} ${root}docs/${v}"
+            done
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Archive missing from the build - refusing to sync:${missing}"
+            echo "A mirroring sync now would DELETE these from S3. See ARCHIVE.md."
+            exit 1
+          fi
+          echo "Archive present in build/ for every frozen version."
+
+      - name: Replace the site, archive included
+        env:
+          BUCKET_SECRET: ${{ inputs.target == 'prod' && secrets.AWS_OSS_DOCS_PROD_BUCKET || secrets.AWS_OSS_DOCS_STAGE_BUCKET }}
+        run: |
+          set -euo pipefail
+          if [ -z "${BUCKET_SECRET:-}" ]; then
+            echo "::error::No bucket configured for target '$TARGET'"
+            exit 1
+          fi
+          # Assets first and additive, as in the deploy workflows: the rebuilt
+          # pages reference new hashed chunks, and nothing should 404 on its JS
+          # in between.
+          aws s3 sync build/ s3://$BUCKET_SECRET/ --quiet \
+            --exclude "*" \
+            --include "assets/*" --include "zh/assets/*" --include "ja/assets/*"
+
+          # Then mirror everything else. No frozen excludes: this build contains
+          # every version, so there is nothing to protect from --delete, and
+          # excluding the archive here would mean the rebuilt pages were never
+          # uploaded. The step above refuses to reach this point if the archive
+          # is missing from build/.
+          aws s3 sync build/ s3://$BUCKET_SECRET/ --quiet --delete \
+            --exclude "assets/*" --exclude "zh/assets/*" --exclude "ja/assets/*"
+
+          aws s3 cp build/ s3://$BUCKET_SECRET/ --quiet --recursive \
+            --exclude "*" --include "*.md" \
+            --content-type "text/markdown; charset=utf-8"
+
+      - name: clean cdn cache
+        env:
+          CLOUFRONT_DIST_ID: ${{ inputs.target == 'prod' && secrets.AWS_OSS_DOCS_PROD_CLOUDFRONT_DIST_ID || secrets.AWS_OSS_DOCS_STAGE_CLOUDFRONT_DIST_ID }}
+        run: |
+          aws cloudfront create-invalidation --distribution-id $CLOUFRONT_DIST_ID --paths "/*"
+
+      - name: Leave versions.json unmodified
+        if: always()
+        run: git checkout -- versions.json || true
