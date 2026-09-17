@@ -142,9 +142,19 @@ so a mirroring sync can never be reached with an incomplete build.
 
 ### Afterwards
 
-- If the rebuild added or removed pages, regenerate that version's entries in
-  `frozenSitemapPaths.txt`, or Algolia will keep indexing URLs that are gone and
-  miss the new ones.
+- If the rebuild added or removed pages, regenerate `frozenSitemapPaths.txt`,
+  or Algolia will keep indexing URLs that are gone and miss the new ones:
+
+  ```bash
+  node scripts/regenerate-frozen-sitemap-paths.js     # reads prod's sitemap
+  node scripts/regenerate-frozen-sitemap-paths.js --check   # report, don't write
+  ```
+
+  Run it **after** the rebuild has deployed. In a rebuild the frozen versions are
+  real routes, so the config skips the injection and the published sitemap lists
+  exactly what the archive contains. Run against any other build and you only
+  read back the file you already have, since the injection is what put those
+  entries there.
 - The rebuilt pages pick up today's navbar, footer and announcement bar. If you
   rebuild one version you are effectively rebuilding all of them, which keeps
   the archive internally consistent.
