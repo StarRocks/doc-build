@@ -560,8 +560,8 @@ const config = {
         copyright: `Docs built with Docusaurus.`,
           },
       announcementBar: {
-        // content: `⭐️ If you like Docusaurus, give it a star on <a target="_blank" rel="noopener noreferrer" href="https://github.com/facebook/docusaurus">GitHub</a> and follow us on <a target="_blank" rel="noopener noreferrer" href="https://x.com/docusaurus">X ${TwitterSvg}</a>`,
-	    content: `🎉️ <b><a target="_blank" href="https://www.youtube.com/playlist?list=PL0eWwaesODdjjEvyaupqunQjE5Ndy7-Ku">Watch on demand: StarRocks Summit 2025</a></b> 🎉️`,
+	// content: `🎉️ <b><a target="_blank" href="https://nextquery.phoenixdata.ai">NEXT QUERY is coming November 4th. Join us online!</a></b> 🎉️`,
+	content: `🎉️ <b><a target="_blank" href="https://nextquery.phoenixdata.ai">NEXT QUERY is coming November 4th. Join us online!</a></b> 🎉️`,
         id: 'summit',
         backgroundColor: '#111F64',
         textColor: '#ffffff',
