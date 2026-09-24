@@ -25,14 +25,49 @@ on:
       # instead of one. That lead time is useful rather than merely earlier
       # because a failed stage build posts to Slack.
       - cron: "5 14 * * 1-5"
+# actions: read is for the Slack job, which asks the API which locale jobs
+# failed. Naming any permission drops the rest, hence contents: read as well.
+permissions:
+  contents: read
+  actions: read
 env:
   AWS_KEY: ${{ secrets.AWS_KEY }}
   AWS_SECRET: ${{ secrets.AWS_SECRET }}
+  INPUTS_BRANCH: "${{ inputs.docBuildBranch || 'main' }}"
 jobs:
-  prod_deploy:
-    env:
-      INPUTS_BRANCH: "${{ inputs.docBuildBranch || 'main' }}"
+  # One job per locale, rather than one job building all three in turn.
+  #
+  # The locales used to build one after another in a single job: en, zh and ja
+  # took 8, 7 and 7 minutes, so 23 of the run's 34 minutes were spent waiting
+  # on a build that did not depend on the one before it. In parallel the run is
+  # bounded by the slowest locale instead of the sum of all three.
+  #
+  # It also keeps the property the serial loop was written for: a failing
+  # locale does not hide the others. Each locale has its own job, its own
+  # result and its own log, and the deploy job only runs when all three built.
+  build:
+    strategy:
+      # The locales break independently — a broken link in the Japanese
+      # translation says nothing about English — so one failing must not cancel
+      # the others and hide whether they would have built.
+      fail-fast: false
+      matrix:
+        include:
+          # en is the default locale and writes the whole of build/; zh and ja
+          # write only build/zh/ and build/ja/. Uploading each from its own root
+          # lets the deploy job drop them back into place without a merge.
+          # Spelled out per locale rather than computed, because a GitHub
+          # expression has no clean way to say "build/ for en, else build/<locale>".
+          - locale: en
+            artifact_path: build
+          - locale: zh
+            artifact_path: build/zh
+          - locale: ja
+            artifact_path: build/ja
     runs-on: ubuntu-24.04-arm
+    # A locale takes ~8 minutes to build plus ~4 of setup. This is headroom,
+    # and a bound on a hang, not an expected duration.
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v3
         with:
@@ -43,7 +78,7 @@ jobs:
           node-version: 24
           cache: 'yarn'
           cache-dependency-path: 'yarn.lock'
-      
+
       - uses: actions/cache@v3
         id: cache
         with:
@@ -51,14 +86,7 @@ jobs:
           key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-yarn-
-          
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_KEY }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET }}
-          aws-region: us-west-2
-      
+
       - uses: actions/checkout@v3
         with:
           repository: starrocks/starrocks
@@ -69,69 +97,118 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
           yarn install --frozen-lockfile
-      
+
+      # Copies every locale, not just this job's. The copy also runs the MDX
+      # checker, and the other locales' sources are only a minute of it.
       - run: npm run copy
 
       # Fails fast if the CloudFront Function's route exclusions have drifted
       # from src/agentDocsRoutes.js — see the script header for why it matters.
+      # It reads source, not build output, so one locale is enough.
       - name: Check CloudFront markdown exclusions are in sync
+        if: matrix.locale == 'en'
         run: node scripts/check-cloudfront-excludes.js
 
       # One locale per `yarn build`. Building all three in a single node process
-      # peaks above the runner's heap and gets OOM-killed partway through; a
-      # fresh process per locale stays inside the limit.
+      # peaks above the runner's heap and gets OOM-killed partway through.
       #
       # This only works because docusaurus.config.js pins the zh and ja
       # baseUrls — a single `--locale` disables automatic locale-segment
-      # inference, so without those pins zh and ja land on build/ and wipe the
-      # English site. en must run first: it writes to build/, which Docusaurus
-      # clears before writing.
-      # A failing locale does not stop the loop. The locales break independently
-      # — a broken link in the Japanese translation says nothing about English —
-      # and stopping at the first failure hides the rest, so a red build gets
-      # fixed one locale per day. All failures are reported together at the end
-      # and the step still exits non-zero, so the deploy steps below are skipped.
-      - name: Build website
-        id: build
+      # inference, so without those pins zh and ja would write to build/ and
+      # render their URLs without the /zh/ or /ja/ prefix.
+      - name: Build website (${{ matrix.locale }})
         run:  |
           export NODE_OPTIONS="--max_old_space_size=12288"
           export DOCUSAURUS_PERF_LOGGER=false
           export DOCUSAURUS_IGNORE_SSG_WARNINGS=true
           export BROWSERSLIST_IGNORE_OLD_DATA=true
-          failed_locales=""
-          for locale in en zh ja; do
-            echo "::group::build ${locale}"
-            if yarn build --locale "${locale}"; then
-              echo "locale ${locale}: OK"
-            else
-              echo "::error::Locale ${locale} failed to build"
-              failed_locales="${failed_locales} ${locale}"
-            fi
-            echo "::endgroup::"
-          done
-          {
-            echo "| locale | result |"
-            echo "| --- | --- |"
-            for locale in en zh ja; do
-              case " ${failed_locales} " in
-                *" ${locale} "*) echo "| ${locale} | ❌ failed |" ;;
-                *)               echo "| ${locale} | ✅ ok |" ;;
-              esac
-            done
-          } >> "$GITHUB_STEP_SUMMARY"
-          echo "failed_locales=${failed_locales# }" >> "$GITHUB_OUTPUT"
-          if [ -n "${failed_locales}" ]; then
-            echo "Failed locales:${failed_locales}"
-            exit 1
-          fi
+          yarn build --locale "${{ matrix.locale }}"
 
+      # Both of these read only the en output — the Markdown twins, llms.txt,
+      # robots.txt and the sitemaps at the root of build/ — so they run in the
+      # en job, before its artifact is uploaded, rather than on the assembled
+      # site.
       - name: Post-process llms.txt and markdown for agents
+        if: matrix.locale == 'en'
         run: node scripts/llms-postprocess.js build
 
       # Archived versions flooding the head of the sitemap makes agent checkers
       # sampling it conclude Accept: text/markdown is ignored — see the script header.
       - name: Check sitemap markdown coverage
+        if: matrix.locale == 'en'
         run: node scripts/check-sitemap-markdown-coverage.js build
+
+      - name: Upload the built site
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-${{ matrix.locale }}
+          path: ${{ matrix.artifact_path }}
+          # Each locale ships a .nojekyll from static/. Dropping it would be
+          # harmless, but the sync below mirrors with --delete, and the bucket
+          # should end up exactly as the single-job build left it.
+          include-hidden-files: true
+          # The artifact only has to survive until the deploy job picks it up.
+          retention-days: 1
+          # A locale that built nothing must not reach the deploy job as an
+          # empty directory.
+          if-no-files-found: error
+          # Most of this is HTML, which level 1 still folds down several-fold
+          # for a fraction of the CPU the default level 6 costs.
+          compression-level: 1
+
+  deploy:
+    # Only when every locale built. A partial site would --delete the missing
+    # locale's pages from the bucket rather than fail visibly.
+    needs: build
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    steps:
+      # Only scripts/ and frozenVersions.json are needed here, for the frozen
+      # tree excludes and the check after the sync.
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ env.INPUTS_BRANCH }}
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 24
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET }}
+          aws-region: us-west-2
+
+      # en first: it is the root of the tree the other two land inside.
+      - name: Download the en site
+        uses: actions/download-artifact@v4
+        with:
+          name: site-en
+          path: build
+
+      - name: Download the zh site
+        uses: actions/download-artifact@v4
+        with:
+          name: site-zh
+          path: build/zh
+
+      - name: Download the ja site
+        uses: actions/download-artifact@v4
+        with:
+          name: site-ja
+          path: build/ja
+
+      # Fail loudly rather than sync half a site. The artifacts are all that
+      # stands between a matrix mistake and a --delete that empties a locale.
+      - name: Check the assembled site
+        run: |
+          set -euo pipefail
+          for page in index.html zh/index.html ja/index.html; do
+            test -f "build/${page}" \
+              || { echo "::error::build/${page} missing from the downloaded artifacts"; exit 1; }
+          done
+          du -sh build build/zh build/ja
 
       - name: sync to S3
         env:
@@ -228,29 +305,47 @@ jobs:
         run: |
           aws cloudfront create-invalidation --distribution-id $CLOUFRONT_DIST_ID --paths "/*"
 
-      # Nothing watches these cron runs. Prod was red from 2026-09-03 to
-      # 2026-09-15 and served stale docs for 13 days because a build failure is
-      # silent unless somebody opens the Actions tab.
-      #
-      # The step no-ops when SLACK_WEBHOOK is unset, so it is safe to merge
-      # before the secret exists. Fires on every failure, not just `schedule` —
-      # a dispatched run that nobody stays to watch is the same problem. To
-      # restrict it, add `&& github.event_name == 'schedule'` to the condition.
+  # Nothing watches these cron runs. Prod was red from 2026-09-03 to
+  # 2026-09-15 and served stale docs for 13 days because a build failure is
+  # silent unless somebody opens the Actions tab.
+  #
+  # The step no-ops when SLACK_WEBHOOK is unset, so it is safe to merge
+  # before the secret exists. Fires on every failure, not just `schedule` —
+  # a dispatched run that nobody stays to watch is the same problem. To
+  # restrict it, add `&& github.event_name == 'schedule'` to the condition.
+  #
+  # A job of its own now that the build is split: failure() here is true when
+  # any locale job or the deploy failed, and a step inside one of those jobs
+  # could only see its own.
+  notify:
+    needs: [build, deploy]
+    if: failure()
+    runs-on: ubuntu-24.04-arm
+    steps:
       - name: Notify Slack on failure
-        if: failure()
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          FAILED_LOCALES: ${{ steps.build.outputs.failed_locales }}
+          GITHUB_TOKEN: ${{ github.token }}
+          JOBS_URL: ${{ github.api_url }}/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}/jobs
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           if [ -z "${SLACK_WEBHOOK:-}" ]; then
             echo "SLACK_WEBHOOK is not set - skipping Slack notification."
             exit 0
           fi
-          if [ -n "${FAILED_LOCALES:-}" ]; then
-            detail="Locales that failed to build: ${FAILED_LOCALES}"
+          # Matrix jobs cannot hand a result to a downstream job, so ask the API
+          # which ones failed. The job names are "build (en)" and so on, and
+          # a failed deploy shows up as "deploy". A job-level timeout concludes
+          # as "cancelled", hence both. An API error must not stop the message
+          # going out, so it falls back to pointing at the run.
+          failed_jobs=$(curl -sS --fail -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+              -H "Accept: application/vnd.github+json" "${JOBS_URL}?per_page=100" \
+            | jq -r '[.jobs[] | select(.conclusion == "failure" or .conclusion == "cancelled") | .name] | join(", ")' \
+            2>/dev/null || true)
+          if [ -n "${failed_jobs}" ]; then
+            detail="Failed jobs: ${failed_jobs}"
           else
-            detail="Failed outside the build loop - check which step failed in the run log."
+            detail="Could not list the failed jobs - check the run log."
           fi
           # jq builds the payload so quotes and newlines in the detail text
           # cannot produce malformed JSON. --fail-with-body makes a rotated or
