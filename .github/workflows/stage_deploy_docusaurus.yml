@@ -39,6 +39,7 @@ jobs:
   # locale does not hide the others. Each locale has its own job, its own
   # result and its own log, and the deploy job only runs when all three built.
   build:
+    name: build (${{ matrix.locale }})
     strategy:
       # The locales break independently — a broken link in the Japanese
       # translation says nothing about English — so one failing must not cancel
