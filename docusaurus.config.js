@@ -481,8 +481,8 @@ const config = {
           // the extra nav items. If you do need to QA these build in staging after
           // merging your PR.
           {
-            href: "https://www.youtube.com/playlist?list=PL0eWwaesODdjjEvyaupqunQjE5Ndy7-Ku",
-            label: "StarRocks Summit 2025",
+            href: "https://nextquery.phoenixdata.ai/?utm_source=website&utm_medium=website&utm_campaign=FY26_PHX_OEV_NEXT_QUERY_2026&utm_content=starrocks-doc",
+            label: "NEXT QUERY 2026",
             position: "right",
           },          
           {
@@ -561,7 +561,7 @@ const config = {
           },
       announcementBar: {
 	// content: `🎉️ <b><a target="_blank" href="https://nextquery.phoenixdata.ai">NEXT QUERY is coming November 4th. Join us online!</a></b> 🎉️`,
-	content: `🎉️ <b><a target="_blank" href="https://nextquery.phoenixdata.ai">NEXT QUERY is coming November 4th. Join us online!</a></b> 🎉️`,
+	content: `🎉️ <b><a target="_blank" href="https://nextquery.phoenixdata.ai/?utm_source=website&utm_medium=website&utm_campaign=FY26_PHX_OEV_NEXT_QUERY_2026&utm_content=starrocks-doc">NEXT QUERY is coming November 4th. Join us online!</a></b> 🎉️`,
         id: 'summit',
         backgroundColor: '#111F64',
         textColor: '#ffffff',
