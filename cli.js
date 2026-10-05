@@ -18,6 +18,15 @@ const exec = require("child_process").exec;
 const execSync = require("child_process").execSync;
 
 const tempDir = path.join(__dirname, "temp");
+// The starrocks/starrocks branch that supplies the unversioned (latest) docs. A staging build
+// can point this at a pull request's branch to preview it; everything else uses main. The
+// versioned docs always come from their release branches (branch-4.1 and so on).
+const starrocksBranch = process.env.STARROCKS_BRANCH || "main";
+// It ends up in a shell command below, so accept only characters a branch name needs.
+if (!/^[A-Za-z0-9._\/-]+$/.test(starrocksBranch) || starrocksBranch.startsWith("-")) {
+  console.error(`STARROCKS_BRANCH is not a valid branch name: ${JSON.stringify(starrocksBranch)}`);
+  process.exit(1);
+}
 const docsDir = path.join(__dirname, config.docDir);
 const deleteDirIfExist = (path) => {
   if (fs.existsSync(path)) {
@@ -271,7 +280,7 @@ const copyDocs = () => {
     versions.forEach((v) => {
       console.log("working on locale " + l.id + " and version " + v.branch);
       const targetBranch =
-        v.branch === "main" ? "main" : l.branchPrefix + v.branch;
+        v.branch === "main" ? starrocksBranch : l.branchPrefix + v.branch;
       let to = path.join(__dirname, `versioned_docs/version-${v.branch}`);
       if (l.id === "zh-cn") {
         to = path.join(
@@ -288,7 +297,7 @@ const copyDocs = () => {
       execSync(
         `mkdir -p ${from} && cd ${from} && git checkout ${targetBranch}`
       );
-      if (targetBranch === "main") {
+      if (v.branch === "main") {
         const floderPath =
           {
             "en-us": enSiderbarPath,
