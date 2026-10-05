@@ -18,15 +18,30 @@ const exec = require("child_process").exec;
 const execSync = require("child_process").execSync;
 
 const tempDir = path.join(__dirname, "temp");
-// The starrocks/starrocks branch that supplies the unversioned (latest) docs. A staging build
-// can point this at a pull request's branch to preview it; everything else uses main. The
-// versioned docs always come from their release branches (branch-4.1 and so on).
-const starrocksBranch = process.env.STARROCKS_BRANCH || "main";
-// It ends up in a shell command below, so accept only characters a branch name needs.
-if (!/^[A-Za-z0-9._\/-]+$/.test(starrocksBranch) || starrocksBranch.startsWith("-")) {
-  console.error(`STARROCKS_BRANCH is not a valid branch name: ${JSON.stringify(starrocksBranch)}`);
-  process.exit(1);
-}
+// Branch overrides for a staging preview, from STARROCKS_BRANCHES: space- or comma-separated
+// `<version>=<branch>` pairs, where <version> is `main` or an entry of versions.json, for example
+//   main=docs/my-change 4.1=docs/my-change-4.1
+// A version not named keeps its usual branch (main, or branch-<version>). Each branch must be
+// on starrocks/starrocks itself, since temp/ is a clone of that repository.
+const branchOverrides = (() => {
+  const overrides = {};
+  const known = new Set(["main", ...require("./versions.json")]);
+  for (const pair of (process.env.STARROCKS_BRANCHES || "").split(/[\s,]+/).filter(Boolean)) {
+    const [version, branch, extra] = pair.split("=");
+    // The branch ends up in a shell command below, so accept only characters a branch name needs.
+    if (!known.has(version) || !branch || extra !== undefined ||
+        !/^[A-Za-z0-9._\/-]+$/.test(branch) || branch.startsWith("-")) {
+      console.error(`STARROCKS_BRANCHES: expected <version>=<branch> with a version from ` +
+        `${[...known].join(", ")}, got ${JSON.stringify(pair)}`);
+      process.exit(1);
+    }
+    overrides[version] = branch;
+  }
+  for (const [version, branch] of Object.entries(overrides)) {
+    console.log(`using starrocks branch ${branch} for version ${version}`);
+  }
+  return overrides;
+})();
 const docsDir = path.join(__dirname, config.docDir);
 const deleteDirIfExist = (path) => {
   if (fs.existsSync(path)) {
@@ -280,7 +295,8 @@ const copyDocs = () => {
     versions.forEach((v) => {
       console.log("working on locale " + l.id + " and version " + v.branch);
       const targetBranch =
-        v.branch === "main" ? starrocksBranch : l.branchPrefix + v.branch;
+        branchOverrides[v.branch] ||
+        (v.branch === "main" ? "main" : l.branchPrefix + v.branch);
       let to = path.join(__dirname, `versioned_docs/version-${v.branch}`);
       if (l.id === "zh-cn") {
         to = path.join(

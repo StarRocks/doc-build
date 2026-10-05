@@ -7,10 +7,10 @@ on:
         required: true
         default: 'main'
         type: string
-      starrocksBranch:
-        description: 'starrocks/starrocks branch for the latest docs (to preview a PR)'
-        required: true
-        default: 'main'
+      starrocksBranches:
+        description: 'Preview starrocks/starrocks branches: <version>=<branch> pairs, e.g. "main=docs/x 4.1=docs/x-4.1". Empty: main and branch-<version>'
+        required: false
+        default: ''
         type: string
       docVersionsToBuild:
         description: 'Build two recent doc versions, or all?'
@@ -31,9 +31,9 @@ env:
   AWS_KEY: ${{ secrets.AWS_KEY }}
   AWS_SECRET: ${{ secrets.AWS_SECRET }}
   INPUTS_BRANCH: "${{ inputs.docBuildBranch || 'main' }}"
-  # Read by `npm run copy` (cli.js). Only the latest, unversioned docs come from
-  # this branch; the versioned docs always come from their release branches.
-  STARROCKS_BRANCH: "${{ inputs.starrocksBranch || 'main' }}"
+  # Read by `npm run copy` (cli.js), which documents the format. Versions not
+  # named build from their usual branches, so a scheduled run is unaffected.
+  STARROCKS_BRANCHES: "${{ inputs.starrocksBranches || '' }}"
   INPUTS_VERSIONS: "${{ inputs.docVersionsToBuild || 'All' }}"
 jobs:
   # One job per locale, rather than one job building all three in turn.
@@ -361,7 +361,7 @@ jobs:
           # exits 0 on an HTTP error otherwise, and Slack reports problems in
           # the response body (it answers a good POST with "ok").
           text=$(printf '%s\n%s\n%s' \
-            ":rotating_light: *Stage docs deploy failed* (branch \`${INPUTS_BRANCH}\`, starrocks branch \`${STARROCKS_BRANCH}\`, trigger \`${{ github.event_name }}\`)" \
+            ":rotating_light: *Stage docs deploy failed* (branch \`${INPUTS_BRANCH}\`, starrocks branches \`${STARROCKS_BRANCHES:-default}\`, trigger \`${{ github.event_name }}\`)" \
             "${detail}" \
             "${RUN_URL}")
           jq -n --arg t "$text" \
