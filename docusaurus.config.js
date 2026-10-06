@@ -61,6 +61,22 @@ const includedVersions = (() => {
 // Archived (non-latest) versions, i.e. the ones that get a /docs/<version>/ prefix.
 const archivedVersions = includedVersions.filter((v) => v !== lastVersion);
 
+// Pages moved by the starrocks/starrocks introduction and maturity reorganization
+// (StarRocks/starrocks #80118, with backports to 4.1, 4.0 and 3.5), as
+// [old path, new path] under a version's docs root. Redirected in every built
+// version; the frozen versions keep their own copies of the old pages.
+const introductionMoves = [
+  ['introduction/StarRocks_intro/', 'introduction/'],
+  ['introduction/what_is_starrocks/', 'introduction/'],
+  ['introduction/feature_difference/', 'introduction/Architecture/'],
+  ['introduction/maturity/', 'maturity/features/'],
+  ['introduction/versioning/', 'maturity/release_numbering/'],
+];
+const introductionRedirects = [lastVersion, ...archivedVersions].flatMap((v) => {
+  const root = v === lastVersion ? '/docs/' : `/docs/${v}/`;
+  return introductionMoves.map(([from, to]) => ({from: root + from, to: root + to}));
+});
+
 // Per-version label and banner, generated so that a version roll or an archive
 // rebuild cannot leave a stale hand-written entry behind. Docusaurus throws if
 // this map names a version that is not in versions.json, so it has to track the
@@ -375,6 +391,7 @@ const config = {
           from: '/docs/loading/cloud_storage_load/',
           to: '/docs/loading/objectstorage/'
         },
+        ...introductionRedirects,
       ],
     },
     ],
