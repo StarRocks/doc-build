@@ -2,8 +2,8 @@
 
 These are the published URLs for staging and production:
 
-- Staging, sandbox, test: https://docs-stage.starrocks.io/docs/introduction/StarRocks_intro/
-- Production: https://docs.starrocks.io/docs/introduction/StarRocks_intro/
+- Staging, sandbox, test: https://docs-stage.starrocks.io/docs/introduction/
+- Production: https://docs.starrocks.io/docs/introduction/
 
 ## Building staging or production
 

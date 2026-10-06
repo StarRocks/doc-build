@@ -68,7 +68,7 @@ function check(name, actual, expected) {
 }
 
 // --- inert on live pages ---
-const live = run('/docs/introduction/StarRocks_intro/');
+const live = run('/docs/introduction/Architecture/');
 check('live page: guard not armed', {armed: live.armed, patched: live.patched}, {armed: false, patched: false});
 
 // --- armed on a frozen en page ---
@@ -79,8 +79,8 @@ check('en: link within same frozen version stays SPA',
 check('en: link to another frozen version stays SPA (same bundle)',
   en.click('/docs/3.1/quick_start/'), {prevented: false, assigned: null});
 check('en: link to current docs escapes',
-  en.click('/docs/introduction/StarRocks_intro/'),
-  {prevented: true, assigned: 'https://docs.starrocks.io/docs/introduction/StarRocks_intro/'});
+  en.click('/docs/introduction/Architecture/'),
+  {prevented: true, assigned: 'https://docs.starrocks.io/docs/introduction/Architecture/'});
 check('en: link to still-built 3.5 escapes',
   en.click('/docs/3.5/quick_start/'),
   {prevented: true, assigned: 'https://docs.starrocks.io/docs/3.5/quick_start/'});
