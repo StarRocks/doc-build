@@ -19,7 +19,6 @@
     "@algolia/client-search": "^5.45.0",
     "@copilotkit/react-core": "1.9.3",
     "@copilotkit/react-ui": "1.9.3",
-    "@docsearch/react": "3",
     "@docusaurus/core": "^3.9.2",
     "@docusaurus/faster": "^3.9.2",
     "@docusaurus/plugin-client-redirects": "^3.9.2",
@@ -35,8 +34,8 @@
     "postcss": "^8.5.6",
     "posthog-js": "^1.97.1",
     "prism-react-renderer": "^2.1.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
     "tailwindcss": "^4.1.16"
   },
   "resolutions": {
