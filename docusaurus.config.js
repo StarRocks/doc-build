@@ -72,9 +72,15 @@ const introductionMoves = [
   ['introduction/maturity/', 'maturity/features/'],
   ['introduction/versioning/', 'maturity/release_numbering/'],
 ];
+// The general metrics page folded into the metric_details category index
+// (StarRocks/starrocks #81690), in the same form.
+const monitoringMoves = [
+  ['administration/management/monitoring/metrics/',
+   'administration/management/monitoring/metric_details/'],
+];
 const introductionRedirects = [lastVersion, ...archivedVersions].flatMap((v) => {
   const root = v === lastVersion ? '/docs/' : `/docs/${v}/`;
-  return introductionMoves.map(([from, to]) => ({from: root + from, to: root + to}));
+  return [...introductionMoves, ...monitoringMoves].map(([from, to]) => ({from: root + from, to: root + to}));
 });
 
 // Per-version label and banner, generated so that a version roll or an archive
