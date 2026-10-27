@@ -125,6 +125,31 @@ jobs:
           export BROWSERSLIST_IGNORE_OLD_DATA=true
           yarn build --locale "${{ matrix.locale }}"
 
+      # React 18's renderToPipeableStream, which Docusaurus renders every page
+      # with, wrote the unused tail of its 2048-byte encode buffer whenever a
+      # multibyte character did not fit, putting NUL bytes into the HTML, mostly
+      # in zh and ja pages (facebook/react#31134, fixed in React 19 by
+      # facebook/react#26228). Browsers ignore them; text tools, search
+      # indexers and agents reading the pages do not. Fail rather than publish
+      # them again.
+      - name: Check the HTML for NUL bytes (${{ matrix.locale }})
+        # Python rather than grep: GNU grep treats a file containing NUL as
+        # binary and can take NUL as a line separator, so a grep for it may
+        # quietly match nothing.
+        run: |
+          python3 - "${{ matrix.artifact_path }}" <<'PY'
+          import pathlib, sys
+          bad = [p for p in pathlib.Path(sys.argv[1]).rglob("*.html")
+                 if b"\0" in p.read_bytes()]
+          print(f"HTML files containing NUL bytes: {len(bad)}")
+          for p in bad[:5]:
+              print(f"  {p}")
+          if bad:
+              print(f"::error::{len(bad)} HTML files contain NUL bytes. "
+                    "Check the react-dom version in yarn.lock (needs 19 or later).")
+              sys.exit(1)
+          PY
+
       # Both of these read only the en output — the Markdown twins, llms.txt,
       # robots.txt and the sitemaps at the root of build/ — so they run in the
       # en job, before its artifact is uploaded, rather than on the assembled
