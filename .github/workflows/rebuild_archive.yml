@@ -7,8 +7,8 @@
 # included.
 #
 # On demand only - there is deliberately no `schedule`. Running here rather than
-# from a laptop is also what makes it usable: the bucket names and AWS
-# credentials are repository secrets.
+# from a laptop is also what makes it usable: the bucket names are
+# repository secrets and the AWS role trusts only this repository's main branch.
 #
 # Because every version is built, this run needs NO frozen excludes - there is
 # nothing to protect that is not being uploaded. That is why the sync below is a
@@ -29,14 +29,21 @@ on:
         default: 'main'
         type: string
 env:
-  AWS_KEY: ${{ secrets.AWS_KEY }}
-  AWS_SECRET: ${{ secrets.AWS_SECRET }}
+  # Assumed through GitHub's OIDC provider instead of stored access keys. The
+  # role trusts only StarRocks/doc-build on main, and may only read and write
+  # the starrocks-io-docs-* buckets and invalidate CloudFront.
+  AWS_ROLE_ARN: arn:aws:iam::081976408565:role/github-actions-doc-build
 jobs:
   rebuild_archive:
     env:
       INPUTS_BRANCH: "${{ inputs.docBuildBranch || 'main' }}"
       TARGET: "${{ inputs.target }}"
     runs-on: ubuntu-24.04-arm
+    # id-token: write lets this job request the OIDC token it exchanges for the
+    # AWS role. Only the jobs that touch AWS get it.
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v3
         with:
@@ -59,8 +66,8 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_KEY }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET }}
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          role-session-name: doc-build-${{ github.run_id }}
           aws-region: us-west-2
 
       - uses: actions/checkout@v3
