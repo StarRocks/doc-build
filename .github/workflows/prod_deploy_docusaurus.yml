@@ -127,6 +127,10 @@ jobs:
           export BROWSERSLIST_IGNORE_OLD_DATA=true
           yarn build --locale "${{ matrix.locale }}"
 
+          # Ask AI on the AI SDK widget (src/components/AskAI) against
+          # starrocks-community-ai. Remove to fall back to the CopilotKit widget.
+          export ASK_AI_URL=https://knowledge.celerdata.com/sr-community/api/ask
+
       # React 18's renderToPipeableStream, which Docusaurus renders every page
       # with, wrote the unused tail of its 2048-byte encode buffer whenever a
       # multibyte character did not fit, putting NUL bytes into the HTML, mostly
