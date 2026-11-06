@@ -132,6 +132,12 @@ const config = {
   // needed for hosting in S3:
   trailingSlash: true,
 
+  customFields: {
+    // Ask AI backend. Set: the AI SDK widget (src/components/AskAI) posts to this URL,
+    // e.g. https://<host>/api/ask. Unset: the CopilotKit widget in src/theme/Layout.
+    askAiUrl: process.env.ASK_AI_URL || '',
+  },
+
   onBrokenAnchors: 'ignore',
   onBrokenLinks: 'throw',
   markdown: { hooks: { onBrokenMarkdownLinks: 'throw' } },
