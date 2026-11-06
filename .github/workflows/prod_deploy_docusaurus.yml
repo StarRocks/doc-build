@@ -125,11 +125,10 @@ jobs:
           export DOCUSAURUS_PERF_LOGGER=false
           export DOCUSAURUS_IGNORE_SSG_WARNINGS=true
           export BROWSERSLIST_IGNORE_OLD_DATA=true
-          yarn build --locale "${{ matrix.locale }}"
-
           # Ask AI on the AI SDK widget (src/components/AskAI) against
           # starrocks-community-ai. Remove to fall back to the CopilotKit widget.
           export ASK_AI_URL=https://knowledge.celerdata.com/sr-community/api/ask
+          yarn build --locale "${{ matrix.locale }}"
 
       # React 18's renderToPipeableStream, which Docusaurus renders every page
       # with, wrote the unused tail of its 2048-byte encode buffer whenever a
