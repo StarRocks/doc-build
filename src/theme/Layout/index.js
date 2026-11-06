@@ -1,5 +1,6 @@
 import React from "react";
 import useBaseUrl from "@docusaurus/useBaseUrl";
+import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import { CopilotKit } from "@copilotkit/react-core";
 import { CopilotPopup, useChatContext } from "@copilotkit/react-ui";
 import "@site/src/css/copilotkit.css";
@@ -97,12 +98,10 @@ export default function Layout(props) {
     description,
   } = props;
   useKeyboardNavigation();
-  return (
-    <CopilotKit
-      agent="sr_agent"
-      runtimeUrl="https://ai-agent.starrocks.com/copilotkit/"
-      showDevConsole={false}
-    >
+  // With ASK_AI_URL the AI SDK widget in src/theme/Root serves Ask AI instead.
+  const { siteConfig } = useDocusaurusContext();
+  const copilot = !siteConfig.customFields?.askAiUrl;
+  const page = (
       <LayoutProvider>
         <PageMetadata title={title} description={description} />
 
@@ -128,7 +127,7 @@ export default function Layout(props) {
         </div>
 
         {!noFooter && <Footer />}
-        <CopilotPopup
+        {copilot && <CopilotPopup
           labels={{
             title: "StarRocks Assistant",
             initial:
@@ -139,8 +138,17 @@ export default function Layout(props) {
           markdownTagRenderers={createMarkdownTagRenderers()}
           RenderActionExecutionMessage={MyRenderActionExecutionMessage}
           Input={(props) => <CopilotCustomInput {...props} />}
-        />
+        />}
       </LayoutProvider>
+  );
+  if (!copilot) return page;
+  return (
+    <CopilotKit
+      agent="sr_agent"
+      runtimeUrl="https://ai-agent.starrocks.com/copilotkit/"
+      showDevConsole={false}
+    >
+      {page}
     </CopilotKit>
   );
 }
