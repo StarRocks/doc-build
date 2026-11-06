@@ -203,7 +203,7 @@ div[class^='announcementBar_'] {
 }
 
 @media print {
-    .theme-edit-this-page , .feedback_Ak7m , .theme-doc-breadcrumbs   {
+    .theme-edit-this-page , .theme-doc-feedback , .theme-doc-breadcrumbs   {
         display: none;
     }
 }
