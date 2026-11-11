@@ -237,6 +237,28 @@ const cleanup = () => {
     }
   }
 
+  // ── Product blocks ────────────────────────────────────────────────────────
+
+  // Pages in StarRocks/starrocks can carry `:::product <names>` ... `:::` blocks,
+  // synced up from CelerData/celerdata-enterprise, where the same pages are
+  // published to several products. Keep the content of blocks that name `oss`,
+  // drop the others, and always drop the fence lines; otherwise they render as
+  // text (StarRocks/starrocks#82548). --blocks-only leaves every page in place:
+  // pages here have no `products` frontmatter. scripts/product-filter.mjs is a
+  // copy of docs/tools/product-filter.mjs in celerdata-enterprise; update it
+  // from there. A malformed block fails the build, naming the file and line.
+  const productFilterDirs = [
+    ...versionedBranches.flatMap(allLocaleDirsFor),
+    path.join(__dirname, 'releasenotes'),
+    path.join(__dirname, 'common'),
+  ].filter((dir) => fs.existsSync(dir));
+  console.log('resolving :::product blocks for oss');
+  execSync(
+    `node ${JSON.stringify(path.join(__dirname, 'scripts', 'product-filter.mjs'))} --product oss --blocks-only ` +
+      productFilterDirs.map((dir) => JSON.stringify(dir)).join(' '),
+    { stdio: 'inherit' }
+  );
+
   // ── Post-copy cleanup ─────────────────────────────────────────────────────
 
   console.log('verifying Markdown');
