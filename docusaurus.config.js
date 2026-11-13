@@ -78,9 +78,15 @@ const monitoringMoves = [
   ['administration/management/monitoring/metrics/',
    'administration/management/monitoring/metric_details/'],
 ];
+// The Catalogs category opens on its overview page; its card-list index page was
+// removed (StarRocks/starrocks #83245, with backports to 4.2, 4.1 and 4.0), in the
+// same form.
+const catalogMoves = [
+  ['data_source/catalog/', 'data_source/catalog/catalog_overview/'],
+];
 const introductionRedirects = [lastVersion, ...archivedVersions].flatMap((v) => {
   const root = v === lastVersion ? '/docs/' : `/docs/${v}/`;
-  return [...introductionMoves, ...monitoringMoves].map(([from, to]) => ({from: root + from, to: root + to}));
+  return [...introductionMoves, ...monitoringMoves, ...catalogMoves].map(([from, to]) => ({from: root + from, to: root + to}));
 });
 
 // Per-version label and banner, generated so that a version roll or an archive
