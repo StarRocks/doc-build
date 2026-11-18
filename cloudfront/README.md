@@ -67,6 +67,37 @@ add a `FunctionAssociations` block with `EventType=viewer-request` and the
 function ARN to `DefaultCacheBehavior`, and `update-distribution` with the
 returned `--if-match` ETag.
 
+### Update an existing function
+
+The build does not deploy the function. A merged change to
+`viewer-request-markdown.js` does nothing until someone with AWS access
+updates and publishes the function. Do it right after the site deploy that
+ships the matching change. If staging and prod use separate functions, do
+staging first.
+
+From the repo root:
+
+```bash
+NAME=docs-markdown-content-negotiation
+
+# Upload the new code to the DEVELOPMENT stage
+ETAG=$(aws cloudfront describe-function --name $NAME --query ETag --output text)
+aws cloudfront update-function --name $NAME --if-match "$ETAG" \
+  --function-config Comment="Serve .md on Accept: text/markdown",Runtime="cloudfront-js-2.0" \
+  --function-code fileb://cloudfront/viewer-request-markdown.js
+
+# Publish DEVELOPMENT to LIVE (this needs the DEVELOPMENT stage's new ETag)
+ETAG=$(aws cloudfront describe-function --name $NAME --stage DEVELOPMENT --query ETag --output text)
+aws cloudfront publish-function --name $NAME --if-match "$ETAG"
+```
+
+To test before publishing, use the Console's **Test** tab on the Development
+stage, as in step 3 of "Apply via Console".
+
+The function stays associated with the Default (\*) behavior, so there is
+nothing to re-associate. Then run every check in
+[Verify after deploy](#verify-after-deploy).
+
 ### Notes
 
 - The function only rewrites page routes (trailing slash) that actually have a
@@ -192,6 +223,22 @@ publish shows up:
 curl -sI -H 'Accept: text/markdown' https://docs.starrocks.io/docs/4.0/quick_start/ \
   | grep -iE '^HTTP|content-type'
 # Expect: HTTP/2 200  and  content-type: text/html
+```
+
+Release notes live under `/docs/release_notes/` now. The old `/releasenotes/`
+URLs are only redirect pages with no `.md` twin, so they must stay HTML:
+
+```bash
+# Old release notes URL: must be 200 + text/html (the redirect page), NOT 404
+curl -sI -H 'Accept: text/markdown' https://docs.starrocks.io/releasenotes/release-4.1/ \
+  | grep -iE '^HTTP|content-type'
+# Expect: HTTP/2 200  and  content-type: text/html
+# A 404 here means the published function still rewrites /releasenotes/.
+
+# Current release notes: must be Markdown
+curl -sI -H 'Accept: text/markdown' https://docs.starrocks.io/docs/release_notes/release-4.1/ \
+  | grep -iE '^HTTP|content-type'
+# Expect: HTTP/2 200  and  content-type: text/markdown
 ```
 
 `scripts/check-cloudfront-excludes.js` keeps `viewer-request-markdown.js` in
