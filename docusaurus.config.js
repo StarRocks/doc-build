@@ -84,7 +84,12 @@ const monitoringMoves = [
 const catalogMoves = [
   ['data_source/catalog/', 'data_source/catalog/catalog_overview/'],
 ];
-const introductionRedirects = [lastVersion, ...archivedVersions].flatMap((v) => {
+// Frozen versions are left out: they predate these moves and keep the old pages,
+// so in an archive rebuild (which builds them again) the targets do not exist and
+// the redirect plugin fails the build.
+const introductionRedirects = [lastVersion, ...archivedVersions]
+  .filter((v) => !frozenVersions.includes(v))
+  .flatMap((v) => {
   const root = v === lastVersion ? '/docs/' : `/docs/${v}/`;
   return [...introductionMoves, ...monitoringMoves, ...catalogMoves].map(([from, to]) => ({from: root + from, to: root + to}));
 });
