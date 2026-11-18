@@ -88,7 +88,10 @@ const sample = pathnames.slice(0, SAMPLE_SIZE);
 // 1. The public sitemap must contain NO archived-version URLs at all. They are
 //    Disallow'ed for every user-agent in static/robots.txt, and they live in
 //    sitemap-algolia.xml instead (asserted below).
-const archivedInPublic = pathnames.filter((p) => ARCHIVED.test(p));
+//    The one exception is each version's release notes, which exist only in
+//    their own version's docs and are Allow'ed in robots.txt.
+const RELEASE_NOTES = /^\/docs\/[0-9]+\.[0-9]+\/release_notes\//;
+const archivedInPublic = pathnames.filter((p) => ARCHIVED.test(p) && !RELEASE_NOTES.test(p));
 if (archivedInPublic.length) {
   const prefixes = [...new Set(archivedInPublic.map((p) => p.match(ARCHIVED)[0]))];
   console.error(
@@ -99,7 +102,7 @@ if (archivedInPublic.length) {
       `\n\nThese are Disallow'ed in static/robots.txt, so advertising them here is\n` +
       `contradictory — and they have no Markdown twin, so a checker sampling the\n` +
       `head of the sitemap reports that the server ignores \`Accept: text/markdown\`.\n\n` +
-      `\`sitemap.ignorePatterns\` in docusaurus.config.js derives from \`archivedVersions\`;\n` +
+      `\`sitemap.createSitemapItems\` in docusaurus.config.js filters on \`archivedVersions\`;\n` +
       `check that a version roll updated \`lastVersion\`. Do NOT remove them from\n` +
       `sitemap-algolia.xml — that is the only file Algolia DocSearch has for them.\n`,
   );

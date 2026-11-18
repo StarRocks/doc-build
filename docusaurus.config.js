@@ -84,7 +84,12 @@ const monitoringMoves = [
 const catalogMoves = [
   ['data_source/catalog/', 'data_source/catalog/catalog_overview/'],
 ];
-const introductionRedirects = [lastVersion, ...archivedVersions].flatMap((v) => {
+// Frozen versions are left out: they predate these moves and keep the old pages,
+// so in an archive rebuild (which builds them again) the targets do not exist and
+// the redirect plugin fails the build.
+const introductionRedirects = [lastVersion, ...archivedVersions]
+  .filter((v) => !frozenVersions.includes(v))
+  .flatMap((v) => {
   const root = v === lastVersion ? '/docs/' : `/docs/${v}/`;
   return [...introductionMoves, ...monitoringMoves, ...catalogMoves].map(([from, to]) => ({from: root + from, to: root + to}));
 });
@@ -120,6 +125,46 @@ const versionsConfig = Object.fromEntries(
 // Hoisted so the pinned per-locale baseUrls in `i18n.localeConfigs` below can be
 // derived from it and can't drift out of sync.
 const baseUrl = '/';
+
+// Release notes used to be a separate doc set at /releasenotes/. They now ship
+// inside each version's docs (release_notes/release-X.Y.md, only in the X.Y
+// docs; see cli.js), so every old URL redirects to the page in its own version:
+//
+// - a version built here: an internal path, which the redirect plugin checks
+//   against the built routes;
+// - a frozen version (or one BUILD_FAST leaves out): an absolute URL. The plugin
+//   only validates `to` values that start with "/", and the frozen routes are
+//   not part of this build; they are served from S3 (see ARCHIVE.md). In an
+//   archive rebuild the frozen versions are built again and get internal paths.
+// - 2.5 and 3.0 are no longer published anywhere: the file on GitHub.
+// - the ecosystem notes are the same in every version: the latest version.
+//
+// Redirect `to` paths get the locale's baseUrl added; absolute URLs do not, so
+// those carry the locale themselves.
+const currentLocale = process.env.DOCUSAURUS_CURRENT_LOCALE ?? 'en';
+const siteUrl = (process.env.SITE_URL || 'https://docs.starrocks.io').replace(/\/$/, '');
+const localePrefix = currentLocale === 'en' ? '' : `${currentLocale}/`;
+const versionDocsRoot = (v) => (v === lastVersion ? '/docs/' : `/docs/${v}/`);
+const releaseNotesRedirects = [
+  {from: '/releasenotes/', to: `${versionDocsRoot(lastVersion)}release_notes/`},
+  ...[...new Set([...versions, ...frozenVersions])].map((v) => {
+    const page = `release_notes/release-${v}/`;
+    return {
+      from: `/releasenotes/release-${v}/`,
+      to: includedVersions.includes(v)
+        ? versionDocsRoot(v) + page
+        : `${siteUrl}${baseUrl}${localePrefix}docs/${v}/${page}`,
+    };
+  }),
+  ...['2.5', '3.0'].map((v) => ({
+    from: `/releasenotes/release-${v}/`,
+    to: `https://github.com/StarRocks/starrocks/blob/main/docs/${currentLocale}/release_notes/release-${v}.md`,
+  })),
+  ...['kafka_connector', 'spark_connector', 'flink_connector', 'starrocks-kubernetes-operator'].map((name) => ({
+    from: `/releasenotes/${name}/`,
+    to: `${versionDocsRoot(lastVersion)}release_notes/ecosystem/${name}/`,
+  })),
+];
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -260,6 +305,14 @@ const config = {
         // Console. They were only ever in this file because Algolia needed them,
         // and Algolia now has its own.
         //
+        // Exception: each version's release notes (/docs/<v>/release_notes/**).
+        // Release notes ship only in their own version's docs, so the archived
+        // trees are the only place the older ones exist, and robots.txt Allows
+        // that subtree so they stay indexable. They are filtered here rather
+        // than with ignorePatterns, which cannot express "except". The frozen
+        // versions' release notes are not routes in this build, so they come
+        // from frozenSitemapPaths.txt, the same list the Algolia sitemap uses.
+        //
         // createSitemapItems — sort navigation stubs after real content.
         // Still needed after the trim. ~90 auto-generated /docs/category/**
         // DocCardList stubs sort alphabetically into the front of the remaining
@@ -283,14 +336,35 @@ const config = {
         // scripts/check-sitemap-markdown-coverage.js fails the build if any of
         // this regresses.
         sitemap: {
-          ignorePatterns: archivedVersions.map((v) => `/docs/${v}/**`),
           createSitemapItems: async ({defaultCreateSitemapItems, ...rest}) => {
-            const items = await defaultCreateSitemapItems(rest);
             const archivedPrefixes = archivedVersions.map((v) => `/docs/${v}/`);
+            const isReleaseNotes = (pathname) => /\/docs\/[^/]+\/release_notes\//.test(pathname);
+            const {url, baseUrl: localeBaseUrl} = rest.siteConfig;
+            const prefix = `${url.replace(/\/$/, '')}${localeBaseUrl.replace(/\/$/, '')}`;
+            const generated = await defaultCreateSitemapItems(rest);
+            const {changefreq, priority} = generated[0] ?? {};
+            const builtPaths = new Set(generated.map((i) => new URL(i.url).pathname));
+            const items = [
+              // Archived versions: release notes only.
+              ...generated.filter((item) => {
+                const {pathname} = new URL(item.url);
+                const local = pathname.slice(localeBaseUrl.length - 1);
+                return !archivedPrefixes.some((p) => local.startsWith(p)) || isReleaseNotes(local);
+              }),
+              // Frozen versions' release notes, unless this build emits them (an
+              // archive rebuild does).
+              ...frozenSitemapPaths
+                .filter((p) => isReleaseNotes(p))
+                .map((p) => `${prefix}${p}`)
+                .filter((u) => !builtPaths.has(new URL(u).pathname))
+                .map((u) => ({url: u, changefreq, priority, lastmod: null})),
+            ];
+            const frozenPrefixes = frozenVersions.map((v) => `/docs/${v}/`);
             const tierOf = (item) => {
               const {pathname} = new URL(item.url);
               // 2: archived versions (/docs/4.0/..., /docs/3.5/..., ...)
-              if (archivedPrefixes.some((p) => pathname.startsWith(p))) return 2;
+              const local = pathname.slice(localeBaseUrl.length - 1);
+              if ([...archivedPrefixes, ...frozenPrefixes].some((p) => local.startsWith(p))) return 2;
               // 0: current-version pages with real content; 1: navigation stubs
               // (/docs/category/**, /docs/cover_pages/**, section indexes, /search/)
               return agentDocsRoutes.hasMarkdownTwin(pathname) ? 0 : 1;
@@ -384,19 +458,6 @@ const config = {
       },
     ],
     [
-      "@docusaurus/plugin-content-docs",
-      {
-        path: "releasenotes",
-        id: "releasenotes",
-        routeBasePath: "releasenotes",
-        sidebarPath: "./releasenotes-sidebars.json",
-        // Edit links for English and Chinese
-        editUrl: ({locale, docPath}) => {
-          return 'https://github.com/StarRocks/starrocks/edit/main/docs/' + locale + '/release_notes/' + docPath
-        }
-      },
-    ],
-    [
     '@docusaurus/plugin-client-redirects',
     {
       redirects: [
@@ -410,6 +471,7 @@ const config = {
           to: '/docs/loading/objectstorage/'
         },
         ...introductionRedirects,
+        ...releaseNotesRedirects,
       ],
     },
     ],
@@ -520,10 +582,11 @@ const config = {
             label: "NEXT QUERY 2026",
             position: "right",
           },          
+          // Follows the version being viewed: each version has its own
+          // release_notes/ category (see cli.js).
           {
-            type: 'docSidebar',
-            docsPluginId: 'releasenotes',
-            sidebarId: 'docs',
+            type: 'doc',
+            docId: 'release_notes/release_notes',
             position: 'right',
             label: 'Release Notes',
           },

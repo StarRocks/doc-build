@@ -1,5 +1,10 @@
 
 User-agent: *
+# Each version's release notes exist only in that version's docs, so they stay
+# crawlable. The longer Allow rule wins over the version Disallow rules.
+Allow: /docs/*/release_notes/
+Allow: /zh/docs/*/release_notes/
+Allow: /ja/docs/*/release_notes/
 Disallow: /docs/4.*/
 Disallow: /docs/3.*/
 Disallow: /docs/2.5/
@@ -12,6 +17,8 @@ Disallow: /ja/docs/2.5/
 
 User-agent: Googlebot
 Disallow: /zh/
+Allow: /docs/*/release_notes/
+Allow: /ja/docs/*/release_notes/
 Disallow: /docs/4.*/
 Disallow: /docs/3.*/
 Disallow: /docs/2.5/

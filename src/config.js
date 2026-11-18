@@ -23,5 +23,7 @@ module.exports = {
   enSiderbarPath: 'common/releasenotes/en-us',
   zhSiderbarPath: 'common/releasenotes/zh-cn',
   jaSiderbarPath: 'common/releasenotes/ja',
-  commonSiderBars: ['release_notes','ecosystem_release', 'developers']
+  // Copied from main into common/releasenotes/<locale> (the name is historical:
+  // release notes now ship inside each version's docs), then into every version.
+  commonSiderBars: ['developers']
 };

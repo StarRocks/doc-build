@@ -70,8 +70,8 @@ returned `--if-match` ETag.
 ### Notes
 
 - The function only rewrites page routes (trailing slash) that actually have a
-  `.md` twin: the latest doc version (`/docs/…`, no version prefix) and
-  `/releasenotes/…`. Older versions (`/docs/4.0/`, `/docs/3.5/`, …) and the
+  `.md` twin: the latest doc version (`/docs/…`, no version prefix, which
+  includes its release notes). `/releasenotes/…` only holds redirects. Older versions (`/docs/4.0/`, `/docs/3.5/`, …) and the
   navigation/index routes excluded in `docusaurus.config.js` are left as HTML,
   so agents never get a 404 on a missing `.md`. If you change
   `markdown.excludeRoutes` in the config, update the `EXCLUDED` list in

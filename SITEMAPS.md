@@ -4,7 +4,7 @@ This site builds **two** sitemaps, because two audiences want opposite things.
 
 | File | Contents | Consumed by | Advertised in robots.txt |
 | --- | --- | --- | --- |
-| `/sitemap.xml` | Current version + release notes | Search engines, agent-readiness checkers | Yes (`Sitemap:` line) |
+| `/sitemap.xml` | Current version + every version's release notes (`/docs/<v>/release_notes/`, Allow'ed in robots.txt) | Search engines, agent-readiness checkers | Yes (`Sitemap:` line) |
 | `/sitemap-algolia.xml` | **Everything**, all ~6,900 URLs incl. archived versions | Algolia DocSearch crawler only | No — pointed at explicitly in the crawler config |
 
 Both are emitted by `@docusaurus/plugin-sitemap`: the preset's default instance

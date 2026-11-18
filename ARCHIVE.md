@@ -114,6 +114,13 @@ nothing to freeze.
 
 Frozen versions are not supposed to change, but corrections happen.
 
+That includes release notes. Each version publishes only its own
+`release_notes/release-X.Y.md` (see `cli.js`), so a fix to the 3.4 release notes
+lands on starrocks `branch-3.4` and reaches the site only through this workflow.
+The same goes for the old `/releasenotes/release-3.x/` redirects: they point at
+the archived pages with absolute URLs, because those routes are not part of a
+normal build.
+
 Run the **Rebuild_doc_archive** workflow from the Actions tab. Pick `stage`,
 check the page, then run it again with `prod`. That is the whole process — no
 branch, no config edit, no local build.

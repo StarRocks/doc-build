@@ -117,24 +117,38 @@ const cleanup = () => {
     }
   }
 
-  console.log('rm ecosystem_release');
+  // ── Release notes ─────────────────────────────────────────────────────────
+
+  // Each version publishes only its own release notes: the X.Y docs keep
+  // release_notes/release-X.Y.md, the release_notes.md index and
+  // release_notes/ecosystem/, and every other release-*.md is dropped. The
+  // branches keep the older files in git so the full history stays readable on
+  // GitHub; the build is what decides what is published. Branches cut before
+  // the move still carry the old top-level ecosystem_release/, which is no
+  // longer published from there.
+  console.log('filtering release notes to each version');
   for (const ver of versionedBranches) {
     for (const dir of allLocaleDirsFor(ver)) {
       removeSilent(path.join(dir, 'ecosystem_release'));
+      const notesDir = path.join(dir, 'release_notes');
+      if (!fs.existsSync(notesDir)) continue;
+      for (const name of fs.readdirSync(notesDir)) {
+        if (/^release-.*\.mdx?$/.test(name) && name !== `release-${ver}.md`) {
+          fs.rmSync(path.join(notesDir, name));
+        }
+      }
     }
   }
 
-  // ── Stage release notes and developer docs ────────────────────────────────
+  // ── Stage developer docs ──────────────────────────────────────────────────
 
-  // Clear existing release_notes and developers dirs before repopulating
+  // Clear existing developers dirs before repopulating
   for (const ver of versionedBranches) {
     for (const dir of allLocaleDirsFor(ver)) {
-      removeSilent(path.join(dir, 'release_notes'));
       removeSilent(path.join(dir, 'developers'));
     }
   }
 
-  fse.ensureDirSync(path.join(__dirname, 'releasenotes'));
   fse.ensureDirSync(path.join(__dirname, 'common'));
 
   for (const ver of versionedBranches) {
@@ -176,28 +190,6 @@ const cleanup = () => {
       ...zhIdeImageVersions.map(v => path.join(localeDirFor('zh', v), '_assets')),
       ...versionedBranches.map(v => path.join(localeDirFor('ja', v), '_assets')),
     ]);
-  }
-
-  // Move release note markdown files from common/ staging area to Docusaurus content dirs
-  const releaseNotesLocales = [
-    {
-      src:  path.join(__dirname, 'common', 'releasenotes', 'en-us'),
-      dest: path.join(__dirname, 'releasenotes'),
-    },
-    {
-      src:  path.join(__dirname, 'common', 'releasenotes', 'zh-cn'),
-      dest: path.join(__dirname, 'i18n', 'zh', 'docusaurus-plugin-content-docs-releasenotes', 'current'),
-    },
-    {
-      src:  path.join(__dirname, 'common', 'releasenotes', 'ja'),
-      dest: path.join(__dirname, 'i18n', 'ja', 'docusaurus-plugin-content-docs-releasenotes', 'current'),
-    },
-  ];
-  for (const { src, dest } of releaseNotesLocales) {
-    moveGlob(src, 'release-4*.md', dest);
-    moveGlob(src, 'release-3*.md', dest);
-    moveGlob(src, 'release-2.5.md', dest);
-    moveGlob(src, '*or.md', dest);
   }
 
   // Copy developer docs from the common/ staging area into the latest version,
@@ -249,7 +241,6 @@ const cleanup = () => {
   // from there. A malformed block fails the build, naming the file and line.
   const productFilterDirs = [
     ...versionedBranches.flatMap(allLocaleDirsFor),
-    path.join(__dirname, 'releasenotes'),
     path.join(__dirname, 'common'),
   ].filter((dir) => fs.existsSync(dir));
   console.log('resolving :::product blocks for oss');
