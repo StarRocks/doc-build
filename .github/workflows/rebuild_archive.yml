@@ -63,13 +63,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-yarn-
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ env.AWS_ROLE_ARN }}
-          role-session-name: doc-build-${{ github.run_id }}
-          aws-region: us-west-2
-
       - uses: actions/checkout@v3
         with:
           repository: starrocks/starrocks
@@ -147,6 +140,16 @@ jobs:
           fi
           echo "Archive present in build/ for every frozen version."
 
+      # Assume the role here, not at the start of the job. The session lasts
+      # one hour, and building every version takes longer than that, so
+      # credentials taken before the build expire before the upload.
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          role-session-name: doc-build-${{ github.run_id }}
+          aws-region: us-west-2
+
       - name: Replace the site, archive included
         env:
           BUCKET_SECRET: ${{ inputs.target == 'prod' && secrets.AWS_OSS_DOCS_PROD_BUCKET || secrets.AWS_OSS_DOCS_STAGE_BUCKET }}
@@ -159,7 +162,7 @@ jobs:
           # Assets first and additive, as in the deploy workflows: the rebuilt
           # pages reference new hashed chunks, and nothing should 404 on its JS
           # in between.
-          aws s3 sync build/ s3://$BUCKET_SECRET/ --quiet \
+          aws s3 sync build/ s3://$BUCKET_SECRET/ --only-show-errors \
             --exclude "*" \
             --include "assets/*" --include "zh/assets/*" --include "ja/assets/*"
 
@@ -168,10 +171,10 @@ jobs:
           # excluding the archive here would mean the rebuilt pages were never
           # uploaded. The step above refuses to reach this point if the archive
           # is missing from build/.
-          aws s3 sync build/ s3://$BUCKET_SECRET/ --quiet --delete \
+          aws s3 sync build/ s3://$BUCKET_SECRET/ --only-show-errors --delete \
             --exclude "assets/*" --exclude "zh/assets/*" --exclude "ja/assets/*"
 
-          aws s3 cp build/ s3://$BUCKET_SECRET/ --quiet --recursive \
+          aws s3 cp build/ s3://$BUCKET_SECRET/ --only-show-errors --recursive \
             --exclude "*" --include "*.md" \
             --content-type "text/markdown; charset=utf-8"
 
