@@ -120,7 +120,7 @@ const cleanup = () => {
   // ── Release notes ─────────────────────────────────────────────────────────
 
   // Each version publishes only its own release notes: the X.Y docs keep
-  // release_notes/release-X.Y.md, the release_notes.mdx index and
+  // release_notes/release-X.Y.md, the release_notes.md index and
   // release_notes/ecosystem/, and every other release-*.md is dropped. The
   // branches keep the older files in git so the full history stays readable on
   // GitHub; the build is what decides what is published. Branches cut before
