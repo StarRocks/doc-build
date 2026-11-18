@@ -525,13 +525,6 @@ const config = {
         },
         items: [
           {
-            type: 'docSidebar',
-            sidebarId: 'docs',
-            docsPluginId: 'default',
-            position: 'left',
-            label: 'Docs',
-          },
-          {
             type: 'docsVersionDropdown',
             docsPluginId: 'default',
             position: 'left',
@@ -596,21 +589,19 @@ const config = {
             className: 'header-github-link',
             'aria-label': 'GitHub repository',
           },
-          {
-            type: 'dropdown',
-            label: 'Community',
-            hoverable: true,
-            className: 'EnglishOnly',
-            position: 'right',
-            items: [
-              {
-                label: 'Slack',
-                to: 'https://docs.starrocks.io/join/',
-                className: 'header-slack-link',
-                'aria-label': 'Slack workspace',
-              },
-            ],
-          },
+          // Slack icon for every locale except zh, which gets the 社区群 dropdown
+          // below. Each locale is a separate build (see i18n), so the config can
+          // decide this per locale.
+          ...(currentLocale === 'zh'
+            ? []
+            : [
+                {
+                  href: 'https://docs.starrocks.io/join/',
+                  position: 'right',
+                  className: 'header-slack-link',
+                  'aria-label': 'StarRocks Slack workspace',
+                },
+              ]),
           {
             type: 'dropdown',
             label: '社区群',
@@ -632,11 +623,6 @@ const config = {
             ],
           },
           // end only for production
-          {
-            label: 'Privacy policy',
-            position: 'right',
-            to: 'https://www.starrocks.io/product/privacy-policy',
-          },
         ],
       },
       footer: {

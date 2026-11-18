@@ -75,6 +75,8 @@ img {
   height: 24px;
   display: flex;
   background-image: url("/img/slack-new-logo.svg");
+  background-size: contain;
+  background-repeat: no-repeat;
   width: 20px;
   height: 20px;
   transition: background-color var(--ifm-transition-fast)
