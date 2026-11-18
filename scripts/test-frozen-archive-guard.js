@@ -124,7 +124,8 @@ check('ja: link to ja current docs escapes',
 
 // --- lookalike paths must NOT arm ---
 check('en 3.10 lookalike: not armed', run('/docs/3.10/x/').armed, false);
-check('release notes: not armed', run('/releasenotes/release-3.4/').armed, false);
+check('latest release notes: not armed', run('/docs/release_notes/release-4.1/').armed, false);
+check('frozen release notes: armed', run('/docs/3.4/release_notes/release-3.4/').armed, true);
 check('zh current: not armed', run('/zh/docs/introduction/').armed, false);
 
 console.log(fails === 0 ? '\nALL PASS' : `\n${fails} FAILURE(S)`);

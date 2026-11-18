@@ -43,8 +43,10 @@ the per-version label and banner map. You do not edit a parallel list.
    `scripts/check-sitemap-markdown-coverage.js` fails the build if you forget.
 3. If the "Stable" release moves, update `STABLE_VERSION` in
    `docusaurus.config.js`. Labels are otherwise generated.
-4. Update `releasenotes-sidebars.json`, and the zh `current.json` in the
-   starrocks repo.
+4. Nothing to do for release notes: each version's docs publish
+   `release_notes/release-X.Y.md` for their own version (cli.js filters the
+   rest), and the `/releasenotes/` redirects in `docusaurus.config.js` derive
+   from `versions.json` and `lastVersion`.
 
 ### Retiring a version
 

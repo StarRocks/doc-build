@@ -14,7 +14,7 @@
 //
 // Only page routes that actually have a .md twin are rewritten. Markdown is
 // generated for the en locale only, for the latest doc version (served at
-// /docs/ with no version prefix) and all /releasenotes/ pages — and NOT for
+// /docs/ with no version prefix, release notes included) — and NOT for
 // older versions (/docs/4.0/, /docs/3.5/, ...) or the navigation/index routes
 // excluded in docusaurus.config.js. Everything else — requests without
 // text/markdown, assets, localized (/zh/, /ja/) routes, and docs routes with no
@@ -41,12 +41,6 @@ function handler(event) {
   // Only page routes (trailing slash). Assets have file extensions; .md/.txt
   // and other files do not end with '/'.
   if (uri.charAt(uri.length - 1) !== '/') {
-    return request;
-  }
-
-  // Release notes: all pages have Markdown twins.
-  if (uri.indexOf('/releasenotes/') === 0) {
-    request.uri = uri.substring(0, uri.length - 1) + '.md';
     return request;
   }
 
