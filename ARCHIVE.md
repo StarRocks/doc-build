@@ -147,6 +147,12 @@ frozen excludes. That is deliberate and it is the opposite of the daily deploy:
 A step before the sync fails the run if the archive is missing from `build/`,
 so a mirroring sync can never be reached with an incomplete build.
 
+The workflow has one build job per locale and a separate deploy job, like the
+prod deploy. The build jobs save the site as artifacts (kept for 3 days), and
+only the deploy job gets AWS credentials. If the upload fails, use **Re-run
+failed jobs**: that reruns only the deploy job against the saved build, with no
+rebuild.
+
 ### Afterwards
 
 - If the rebuild added or removed pages, regenerate `frozenSitemapPaths.txt`,

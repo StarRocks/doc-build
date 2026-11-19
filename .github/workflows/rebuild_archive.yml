@@ -34,16 +34,35 @@ env:
   # the starrocks-io-docs-* buckets and invalidate CloudFront.
   AWS_ROLE_ARN: arn:aws:iam::081976408565:role/github-actions-doc-build
 jobs:
-  rebuild_archive:
+  # One job per locale, then one deploy job, as in prod_deploy_docusaurus.yml.
+  #
+  # Building every version of all three locales in one job took over an hour,
+  # which outlived the one-hour AWS role session and left no way to retry the
+  # upload without building again. Split, the locales build in parallel, the
+  # build jobs never touch AWS, and a failed upload is retried with "Re-run
+  # failed jobs", which reruns only the deploy job against the saved artifacts.
+  build:
+    name: build (${{ matrix.locale }})
     env:
       INPUTS_BRANCH: "${{ inputs.docBuildBranch || 'main' }}"
       TARGET: "${{ inputs.target }}"
+    strategy:
+      # Let every locale finish, so one run shows all the failures.
+      fail-fast: false
+      matrix:
+        include:
+          # en writes the whole of build/; zh and ja write only build/zh/ and
+          # build/ja/. See prod_deploy_docusaurus.yml.
+          - locale: en
+            artifact_path: build
+          - locale: zh
+            artifact_path: build/zh
+          - locale: ja
+            artifact_path: build/ja
     runs-on: ubuntu-24.04-arm
-    # id-token: write lets this job request the OIDC token it exchanges for the
-    # AWS role. Only the jobs that touch AWS get it.
+    timeout-minutes: 120
     permissions:
       contents: read
-      id-token: write
     steps:
       - uses: actions/checkout@v3
         with:
@@ -85,12 +104,12 @@ jobs:
         run: npm run copy
 
       - name: Check CloudFront markdown exclusions are in sync
+        if: matrix.locale == 'en'
         run: node scripts/check-cloudfront-excludes.js
 
-      # One locale per `yarn build`; en first. Same constraints as the deploy
-      # workflows - see the comment there.
-      - name: Build website
-        id: build
+      # One locale per `yarn build`. Same constraints as the deploy workflows -
+      # see the comment there.
+      - name: Build website (${{ matrix.locale }})
         run: |
           if [ "$TARGET" = "stage" ]; then
             export SITE_URL=https://docs-stage.starrocks.io
@@ -99,50 +118,99 @@ jobs:
           export DOCUSAURUS_PERF_LOGGER=false
           export DOCUSAURUS_IGNORE_SSG_WARNINGS=true
           export BROWSERSLIST_IGNORE_OLD_DATA=true
-          failed_locales=""
-          for locale in en zh ja; do
-            echo "::group::build ${locale}"
-            if yarn build --locale "${locale}"; then
-              echo "locale ${locale}: OK"
-            else
-              echo "::error::Locale ${locale} failed to build"
-              failed_locales="${failed_locales} ${locale}"
-            fi
-            echo "::endgroup::"
-          done
-          echo "failed_locales=${failed_locales# }" >> "$GITHUB_OUTPUT"
-          if [ -n "${failed_locales}" ]; then
-            echo "Failed locales:${failed_locales}"
-            exit 1
-          fi
+          # Same Ask AI backend as the deploy workflows. Without it the pages
+          # fall back to the CopilotKit widget, and frozen pages keep whatever
+          # this build gives them until the next rebuild.
+          export ASK_AI_URL=https://knowledge.celerdata.com/sr-community/api/ask
+          yarn build --locale "${{ matrix.locale }}"
 
       - name: Post-process llms.txt and markdown for agents
+        if: matrix.locale == 'en'
         env:
           SITE_URL: ${{ inputs.target == 'stage' && 'https://docs-stage.starrocks.io' || '' }}
         run: node scripts/llms-postprocess.js build
 
       - name: Check sitemap markdown coverage
+        if: matrix.locale == 'en'
         run: node scripts/check-sitemap-markdown-coverage.js build
 
+      - name: Upload the built site
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-${{ matrix.locale }}
+          path: ${{ matrix.artifact_path }}
+          include-hidden-files: true
+          # Long enough to re-run a failed deploy the next day, short enough
+          # not to pile up storage.
+          retention-days: 3
+          if-no-files-found: error
+          compression-level: 1
+
+  deploy:
+    # Only when every locale built. A partial site would --delete the missing
+    # locale's pages, archive included, from the bucket.
+    needs: build
+    env:
+      INPUTS_BRANCH: "${{ inputs.docBuildBranch || 'main' }}"
+      TARGET: "${{ inputs.target }}"
+    runs-on: ubuntu-24.04-arm
+    # id-token: write lets this job request the OIDC token it exchanges for the
+    # AWS role. Only the jobs that touch AWS get it.
+    permissions:
+      contents: read
+      id-token: write
+    timeout-minutes: 45
+    steps:
+      # Only frozenVersions.json is needed, for the archive check.
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ env.INPUTS_BRANCH }}
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 24
+
+      # en first: it is the root of the tree the other two land inside.
+      - name: Download the en site
+        uses: actions/download-artifact@v4
+        with:
+          name: site-en
+          path: build
+
+      - name: Download the zh site
+        uses: actions/download-artifact@v4
+        with:
+          name: site-zh
+          path: build/zh
+
+      - name: Download the ja site
+        uses: actions/download-artifact@v4
+        with:
+          name: site-ja
+          path: build/ja
+
+      # The sync below mirrors with --delete and no frozen excludes, so this is
+      # the only thing between a missing archive and deleting it from S3.
       - name: Confirm the archive was actually built
         run: |
           set -uo pipefail
           missing=""
+          for page in index.html zh/index.html ja/index.html; do
+            [ -f "build/${page}" ] || missing="${missing} ${page}"
+          done
           for v in $(node -p "require('./frozenVersions.json').join(' ')"); do
             for root in "" "zh/" "ja/"; do
               [ -f "build/${root}docs/${v}/introduction/index.html" ] || missing="${missing} ${root}docs/${v}"
             done
           done
           if [ -n "$missing" ]; then
-            echo "::error::Archive missing from the build - refusing to sync:${missing}"
+            echo "::error::Missing from the downloaded build - refusing to sync:${missing}"
             echo "A mirroring sync now would DELETE these from S3. See ARCHIVE.md."
             exit 1
           fi
-          echo "Archive present in build/ for every frozen version."
+          echo "Site and archive present in build/ for every locale and frozen version."
+          du -sh build build/zh build/ja
 
-      # Assume the role here, not at the start of the job. The session lasts
-      # one hour, and building every version takes longer than that, so
-      # credentials taken before the build expire before the upload.
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -183,7 +251,3 @@ jobs:
           CLOUFRONT_DIST_ID: ${{ inputs.target == 'prod' && secrets.AWS_OSS_DOCS_PROD_CLOUDFRONT_DIST_ID || secrets.AWS_OSS_DOCS_STAGE_CLOUDFRONT_DIST_ID }}
         run: |
           aws cloudfront create-invalidation --distribution-id $CLOUFRONT_DIST_ID --paths "/*"
-
-      - name: Leave versions.json unmodified
-        if: always()
-        run: git checkout -- versions.json || true
