@@ -7,7 +7,7 @@
 //   CelerData Enterprise  docs/enterprise/docusaurus/scripts/move-files.sh  --product enterprise
 //   PhoenixAI Cloud       phoenixdata-docs combine-phoenixai-and-enterprise.sh  --product cloud
 //   PhoenixAI Anywhere    phoenixai-anywhere-docs import-enterprise-docs.sh     --product anywhere
-//   PhoenixAI AgentBase   phoenixdata-docs combine-agentbase-and-enterprise.sh  --product contextbase
+//   PhoenixAI Contextbase phoenixdata-docs combine-contextbase-and-enterprise.sh --product contextbase
 //
 // Two markers, both documented in README.md next to this file:
 //
