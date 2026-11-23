@@ -7,6 +7,7 @@
 //   CelerData Enterprise  docs/enterprise/docusaurus/scripts/move-files.sh  --product enterprise
 //   PhoenixAI Cloud       phoenixdata-docs combine-phoenixai-and-enterprise.sh  --product cloud
 //   PhoenixAI Anywhere    phoenixai-anywhere-docs import-enterprise-docs.sh     --product anywhere
+//   PhoenixAI AgentBase   phoenixdata-docs (planned)                            --product agent
 //
 // Two markers, both documented in README.md next to this file:
 //
@@ -59,7 +60,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export const PRODUCTS = ['oss', 'enterprise', 'cloud', 'anywhere'];
+export const PRODUCTS = ['oss', 'enterprise', 'cloud', 'anywhere', 'agent'];
 
 const FENCE = /^(\s*)(`{3,}|~{3,})/;
 const PRODUCT_OPEN = /^\s*:::product(?:\s+(.*?))?\s*$/;
@@ -100,8 +101,11 @@ export function readProducts(text, file, errors) {
 }
 
 // Returns { text, removed, kept } with every :::product block resolved for
-// `product`. Pushes to `errors` on unbalanced or nested blocks.
-export function filterBlocks(text, product, file, errors) {
+// `product`. Pushes to `errors` on unbalanced or nested blocks. With
+// keepFences, a kept block keeps its `:::product` and `:::` lines (the reverse
+// sync sends oss blocks up whole, for doc-build to resolve); a removed block
+// goes as usual.
+export function filterBlocks(text, product, file, errors, { keepFences = false } = {}) {
   const eol = text.includes('\r\n') ? '\r\n' : '\n';
   const lines = text.split(/\r?\n/);
   const out = [];
@@ -134,6 +138,7 @@ export function filterBlocks(text, product, file, errors) {
       block = { line: n, keep: names ? names.includes(product) : true, depth: 0 };
       if (block.keep) kept++;
       else removed++;
+      if (block.keep && keepFences) out.push(line);
       return;
     }
 
@@ -141,6 +146,7 @@ export function filterBlocks(text, product, file, errors) {
       if (CONTAINER_OPEN.test(line)) block.depth++;
       else if (CONTAINER_CLOSE.test(line)) {
         if (block.depth === 0) {
+          if (block.keep && keepFences) out.push(line);
           block = null;
           return;
         }
@@ -172,7 +178,7 @@ function walk(dir) {
 // is a partial or asset, not a routed page. Deleting it would break every page
 // that imports it, so a page-level tag there is an error: tag the importing
 // page, or wrap the passage in a :::product block.
-function isPartial(rel) {
+export function isPartial(rel) {
   return rel.split(path.sep).slice(0, -1).some((seg) => seg.startsWith('_'));
 }
 
@@ -180,8 +186,8 @@ const INLINE_LINK = /\]\(\s*<?([^)\s>]+)>?/g;
 const REFERENCE_DEF = /^\s{0,3}\[[^\]]+\]:\s*<?([^\s>]+)>?/;
 const IMPORT_FROM = /^\s*import\s[^'"]*\sfrom\s+['"]([^'"]+)['"]/;
 
-// Yields { line, target } for every relative link and import path in a page,
-// outside fenced code. Absolute URLs, in-page anchors and root-relative routes
+// Yields { line, target, isImport } for every relative link and import path in
+// a page, outside fenced code. Absolute URLs, in-page anchors and root-relative routes
 // (/data_source/...) are skipped: a route is not a file path, so it cannot be
 // matched against the files this run removed.
 export function* relativeLinks(text) {
@@ -198,14 +204,14 @@ export function* relativeLinks(text) {
       fence = f[2];
       continue;
     }
-    const targets = [...line.matchAll(INLINE_LINK)].map((m) => m[1]);
+    const targets = [...line.matchAll(INLINE_LINK)].map((m) => ({ t: m[1], isImport: false }));
     const ref = line.match(REFERENCE_DEF);
-    if (ref) targets.push(ref[1]);
+    if (ref) targets.push({ t: ref[1], isImport: false });
     const imp = line.match(IMPORT_FROM);
-    if (imp) targets.push(imp[1]);
-    for (const t of targets) {
+    if (imp) targets.push({ t: imp[1], isImport: true });
+    for (const { t, isImport } of targets) {
       if (/^[a-z][a-z0-9+.-]*:/i.test(t) || t.startsWith('#') || t.startsWith('/')) continue;
-      yield { line: i + 1, target: t };
+      yield { line: i + 1, target: t, isImport };
     }
   }
 }
@@ -230,7 +236,7 @@ export function run({ product, dirs, blocksOnly = false, dryRun = false, log = c
   let blocksRemoved = 0;
   let blocksKept = 0;
   const writes = [];
-  const keptPages = []; // { file, text } with blocks already resolved
+  const keptPages = []; // { file, rel, text } with blocks already resolved
 
   for (const root of dirs) {
     for (const file of walk(root)) {
@@ -267,14 +273,14 @@ export function run({ product, dirs, blocksOnly = false, dryRun = false, log = c
       // those only matter in a file that has blocks, and existing pages with
       // unbalanced fences must not fail a build that never touches them.
       if (!text.includes(':::product')) {
-        keptPages.push({ file, text });
+        keptPages.push({ file, rel, text });
         continue;
       }
       const res = filterBlocks(text, product, file, errors);
       blocksRemoved += res.removed;
       blocksKept += res.kept;
       if (res.text !== text) writes.push({ file, text: res.text });
-      keptPages.push({ file, text: res.text });
+      keptPages.push({ file, rel, text: res.text });
     }
   }
 
@@ -283,9 +289,30 @@ export function run({ product, dirs, blocksOnly = false, dryRun = false, log = c
   // link far from its cause (onBrokenLinks: 'throw'), or ship a dead link where
   // broken links only warn. Links inside a removed :::product block are already
   // gone from the text checked here.
+  //
+  // A partial is checked only when a kept page imports it, directly or through
+  // another partial. Every product keeps every partial, but a partial no page
+  // imports is never rendered, so its links cannot break that product's site.
   if (removedPages.length) {
     const removed = new Set(removedPages.map((f) => path.resolve(f)));
-    for (const { file, text } of keptPages) {
+    const byPath = new Map(keptPages.map((p) => [path.resolve(p.file), p]));
+    const imported = new Set();
+    const queue = keptPages.filter((p) => !isPartial(p.rel));
+    while (queue.length) {
+      const { file, text } = queue.pop();
+      if (!text.includes('import ')) continue;
+      for (const { target, isImport } of relativeLinks(text)) {
+        if (!isImport) continue;
+        const resolved = linkTargetPath(file, target);
+        const partial = resolved && byPath.get(resolved);
+        if (partial && isPartial(partial.rel) && !imported.has(resolved)) {
+          imported.add(resolved);
+          queue.push(partial);
+        }
+      }
+    }
+    for (const { file, rel, text } of keptPages) {
+      if (isPartial(rel) && !imported.has(path.resolve(file))) continue;
       if (!text.includes('](') && !text.includes(']:') && !text.includes('import ')) continue;
       for (const { line, target } of relativeLinks(text)) {
         const resolved = linkTargetPath(file, target);
