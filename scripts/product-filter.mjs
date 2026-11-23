@@ -7,7 +7,7 @@
 //   CelerData Enterprise  docs/enterprise/docusaurus/scripts/move-files.sh  --product enterprise
 //   PhoenixAI Cloud       phoenixdata-docs combine-phoenixai-and-enterprise.sh  --product cloud
 //   PhoenixAI Anywhere    phoenixai-anywhere-docs import-enterprise-docs.sh     --product anywhere
-//   PhoenixAI AgentBase   phoenixdata-docs (planned)                            --product agent
+//   PhoenixAI AgentBase   phoenixdata-docs combine-agentbase-and-enterprise.sh  --product contextbase
 //
 // Two markers, both documented in README.md next to this file:
 //
@@ -60,7 +60,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export const PRODUCTS = ['oss', 'enterprise', 'cloud', 'anywhere', 'agent'];
+export const PRODUCTS = ['oss', 'enterprise', 'cloud', 'anywhere', 'contextbase'];
 
 const FENCE = /^(\s*)(`{3,}|~{3,})/;
 const PRODUCT_OPEN = /^\s*:::product(?:\s+(.*?))?\s*$/;
